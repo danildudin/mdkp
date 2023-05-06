@@ -2,114 +2,9 @@
 #include <vector>
 #include <algorithm>
 #include <glpk.h>
+#include <map>
 
 using namespace std;
-
-// bool is_feasible(const vector<pair<int, int>> &p, const vector<std::vector<int>> &w, const vector<int> &c, const vector<int> &res) {
-// 	for (int i = 0; i < m; i++) {
-// 		int cur = 0;
-// 		for (int j = 0; j < res.size(); j++) {
-// 			cur += w[res[j].second][i];
-// 		}
-
-// 		if (cur > c[i]) {
-// 			return false;
-// 		}
-// 	}
-
-// 	return true;
-// }
-
-// void search_tree(const vector<pair<int, int>> &p, const vector<std::vector<int>> &w, const vector<int> &c, pair<int, vector<int>> &cur_res, res, int k, int pos) {
-// 	if (pos == p.size()) {
-// 		return;
-// 	}
-// 	if (cur_res.second.size() == k) {
-// 		if (cur_res.first > res.first) {
-// 			res = cur_res;
-// 		}
-// 		return;
-// 	}
-
-// 	cur_res.first += p[pos].first;
-// 	cur_res.second.push_back(pos);
-// 	if (is_feasible(p, w, c, cur_res)) {
-// 		search_tree(p, w, c, cur_res, res, k, pos + 1);
-// 	}
-// 	cur_res.first -= p[pos].first;
-// 	cur_res.second.pop_back();
-
-// 	search_tree(p, w, c, cur_res, res, k, pos + 1);
-// }
-
-// int find_k_max(const vector<pair<int, int>> &p, const vector<std::vector<int>> &w, const vector<int> &c) {
-// 	vector<int> sol;
-// 	for (int j = p.size() - 1; j >= 0; j--) {
-// 		sol.push_back(j);
-// 		if (!is_feasible(p, w, c, sol)) {
-// 			return p.size() - j - 1;
-// 		}
-// 	}
-
-// 	return p.size();
-// }
-
-// int find_k_min(const vector<pair<int, int>> &p, const vector<std::vector<int>> &w, const vector<int> &c, int lb) {
-// 	vector<int> sol;
-// 	int z = 0;
-// 	for (int j = 0; j < p.size(); j++) {
-// 		sol.push_back(j);
-// 		z += p[j];
-// 		if (!is_feasible(p, w, c, sol)) {
-// 			return p.size() + 1;
-// 		}
-// 		if (z > lb) {
-// 			return j + 1;
-// 		}
-// 	}
-
-// 	return p.size() + 1;
-// }
-
-// pair<int, vector<int>> solve_restricted_core(const vector<pair<int, int>> p, const vector<std::vector<int>> &w, const vector<int> &c, int lb) {
-// 	sort(p.begin(), p.end(), [&](const pair<int, int> &a, &b) { a.first < b.first });
-
-// 	int k_min = find_k_min(p, w, c, lb);
-// 	int k_max = find_k_max(p, w, c, lb);
-// 	pair<int, vector<int>> res;
-// 	for (int k = k_min; k <= k_max; k++) {
-// 		pair<int, vector<int>> cur;
-// 		search_tree(p, w, c, cur, res, k, 0);
-// 	}
-// }
-
-// int main() {
-// 	int n, m;
-// 	vector<pair<int, int>> p;
-// 	vector<std::vector<int>> w;
-// 	vector<int> c;
-
-// 	cin >> n >> m;
-// 	p.resize(n);
-// 	w.resize(m, std::vector<int>(n));
-// 	c.resize(m);
-
-// 	for (int i = 0; i < n; i++) {
-// 		cin >> p[i].first;
-// 		p[i].second = i;
-// 	}
-// 	for (int i = 0; i < m; i++) {
-// 		for (int j = 0; j < n; j++) {
-// 			cin >> w[i][j];
-// 		}
-// 	}
-// 	for (int i = 0; i < m; i++) {
-// 		cin >> c[i];
-// 	}
-
-// 	auto res = solve_restricted_core(p, w, c);
-
-// }
 
 /*
 10 2
@@ -118,94 +13,376 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-bool is_feasible(const vector<vector<int>> &a, const vector<int> &b, const vector<double> &x) {
-	for (int j = 0; j < x.size(); j++) {
-		if (x[j] < 0 || x[j] > 1) {
-			return false;
+enum XType {IN, OUT, CORE};
+
+class LPSolution {
+public:
+	struct Item {
+		int id;
+		double x, rc;
+	};
+
+	double cost;
+	vector<Item> items;
+};
+
+class Mkp {
+public:
+	Mkp(const Problem& p): problem(p), cost(0), b(problem.b) {
+		weights.resize(problem.m);
+		for (int i = 0; i < problem.n; i++) {
+			core.insert(i);
 		}
 	}
 
-	for (int i = 0; i < a.size(); i++) {
-		double w = 0;
-		for (int j = 0; j < a[i].size(); j++) {
-			w += x[j] * double(a[i][j]);
-		}
+	void set(int id, XType type) {
+		if (type == IN) {
+			if (n1.find(id) != n1.end()) return;
 
-		if (w > b[i]) {
-			return false;
+			cost += problem.c[id];
+			for (int i = 0; i < problem.m; i++) {
+				weights[i] += problem.a[i][id];
+			}
+
+			n1.insert(id);
+			n0.erase(id);
+			core.erase(id);
+		} else if (type == OUT) {
+			if (n0.find(id) != n0.end()) return;
+
+			if (n1.find(id) != n1.end()) {
+				cost -= problem.c[id];
+				for (int i = 0; i < problem.m; i++) {
+					weights[i] -= problem.a[i][id];
+				}
+			}
+
+			n0.insert(id);
+			n1.erase(id);
+			core.erase(id);
+		} else {
+			if (core.find(id) != core.end()) return;
+
+			if (n1.find(id) != n1.end()) {
+				cost -= problem.c[id];
+				for (int i = 0; i < problem.m; i++) {
+					weights[i] -= problem.a[i][id];
+				}
+			}
+
+			n0.erase(id);
+			n1.erase(id);
+			core.insert(id);
 		}
 	}
 
-	return true;
+	bool is_n0(int id) {
+		return n0.find(id) != n0.end();
+	}
+
+	bool is_n1(int id) {
+		return n1.find(id) != n1.end();
+	}
+
+	bool is_core(int id) {
+		return core.find(id) != core.end();
+	}
+
+	bool is_feasible() const {
+		for (int i = 0; i < problem.m; i++) {
+			if (weights[i] > b[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	Mkp subproblem() const {
+		Mkp res(problem);
+		res.core = core;
+		for (int i = 0; i < b.size(); i++) {
+			res.b[i] = b[i] - weights[i];
+		}
+
+		return res;
+	}
+
+	LPSolution lp_relaxation() const {
+		int m = problem.m;
+		int n = core.size();
+		vector<int> ids(core.begin(), core.end());
+
+		int* ia = new int[1 + n * m];
+		int* ja = new int[1 + n * m];
+		double* ar = new double[1 + n * m];
+	
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < n; j++) {
+				ia[i * n + j + 1] = i + 1;
+				ja[i * n + j + 1] = j + 1;
+				ar[i * n + j + 1] = problem.a[i][ids[j]];
+			}
+		}
+
+		glp_prob *lp;
+		lp = glp_create_prob();
+		glp_set_obj_dir(lp, GLP_MAX);
+
+		glp_add_rows(lp, m);
+		for (int i = 0; i < m; i++) {
+			glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, b[i] - weights[i]);
+		}
+
+		glp_add_cols(lp, n);
+		for (int j = 0; j < n; j++) {
+			glp_set_col_bnds(lp, j + 1, GLP_DB, 0.0, 1.0);
+			glp_set_obj_coef(lp, j + 1, problem.c[ids[j]]);
+		}
+
+		glp_load_matrix(lp, n * m, ia, ja, ar);
+		glp_simplex(lp, NULL);
+
+		LPSolution res;
+		res.cost = glp_get_obj_val(lp);
+		for (int j = 0; j < n; j++) {
+			res.items.emplace_back(ids[j], glp_get_col_prim(lp, j + 1), glp_get_col_dual(lp, j + 1));
+		}
+		sort(res.items.begin(), res.items.end(), [&](const LPSolution::Item &a, &b) { return abs(a.rc) < abs(b.rc) });
+
+		glp_delete_prob(lp);
+		return res;
+	}
+
+public:
+	const Problem& problem;
+	int cost;
+	set<int> n0, n1, core;
+	vector<int> weights;
+	vector<int> b;
+};
+
+class Problem {
+public:
+	void init() {
+		cin >> n >> m;
+		
+		a.resize(m, vector<int>(n));
+		b.resize(m);
+		c.resize(n);
+		for (int j = 0; j < n; j++) {
+			cin >> c[i];
+		}
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < m; j++) {
+				cin >> a[i][j];
+			}
+			cin >> b[i];
+		}
+	}
+
+public:
+	int n, m;
+	vector<vector<int>> a;
+	vector<int> c, b;
 }
 
-void solve_lp_relaxation(const vector<vector<int>> &a, const vector<int> &b, const vector<int> &c) {
-	int m = a.size();
-	int n = a[0].size();
-	
-	int* ia = new int[1 + n * m];
-	int* ja = new int[1 + n * m];
-	double* ar = new double[1 + n * m];
+int find_k(const Mkp &mkp, int lb, bool need_min) {
+	int m = mkp.problem.m;
+	int n = mkp.core.size();
+	vector<int> ids(mkp.core.begin(), mkp.core.end());
+
+	int* ia = new int[1 + n * (m + 1)];
+	int* ja = new int[1 + n * (m + 1)];
+	double* ar = new double[1 + n * (m + 1)];
+
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++) {
 			ia[i * n + j + 1] = i + 1;
 			ja[i * n + j + 1] = j + 1;
-			ar[i * n + j + 1] = a[i][j];
+			ar[i * n + j + 1] = mkp.problem.a[i][ids[j]];
 		}
+	}
+	for (int j = 0; j < n; j++) {
+		ia[m * n + j + 1] = m + 1;
+		ja[m * n + j + 1] = j + 1;
+		ar[m * n + j + 1] = problem.c[ids[j]];
 	}
 
 	glp_prob *lp;
 	lp = glp_create_prob();
-	glp_set_obj_dir(lp, GLP_MAX);
+	glp_set_obj_dir(lp, need_min ? GLP_MIN : GLP_MAX);
 
-	glp_add_rows(lp, m);
+	glp_add_rows(lp, m + 1);
 	for (int i = 0; i < m; i++) {
-		glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, b[i]);
+		glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, mkp.b[i]);
 	}
+	glp_set_row_bnds(lp, m, GLP_LO, lb + 1, 0.0);
 
 	glp_add_cols(lp, n);
 	for (int j = 0; j < n; j++) {
 		glp_set_col_bnds(lp, j + 1, GLP_DB, 0.0, 1.0);
-		glp_set_obj_coef(lp, j + 1, c[j]);
+		glp_set_obj_coef(lp, j + 1, 1);
 	}
 
-	glp_load_matrix(lp, n * m, ia, ja, ar);
+	glp_load_matrix(lp, n * (m + 1), ia, ja, ar);
 	glp_simplex(lp, NULL);
 
-	vector<double> res(n);
+	int res = need_min ? ceil(glp_get_obj_val(lp)) : trunk(glp_get_obj_val(lp));
+	glp_delete_prob(lp);
 
-	cout << "solution:" << endl;
-	cout << "z: " << glp_get_obj_val(lp) << endl;
-	cout << "x, reduced cost" << endl;
-	for (int j = 0; j < n; j++) {
-		res[j] = glp_get_col_prim(lp, j + 1);
-		cout << res[j] << "\t" << glp_get_col_dual(lp, j + 1) << endl;
+	return res;
+}
+
+void search_tree(Mkp &cur, int k, int &lb, Mkp &res) {
+	if (cur.n1.size() == k) {
+		if (cur.cost > res.cost) {
+			res = cur;
+		}
+		return;
 	}
-	cout << "is_feasible: " << is_feasible(a, b, res) << endl;
+	if (cur.core.empty()) {
+		return;
+	}
+
+	int id = sorted[j];
+	cur.set(id, IN);
+	search_tree(...)
+	cur.set(id, OUT);
+	search_tree(...);
+	cur.set(id, CORE);
+}
+
+Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
+	vector<int> sorted(mkp.core.begin(), mkp.core.end());
+	sort(sorted.begin(), sorted.end(), [&](int a, b) { return mkp.problem.c[a] > mkp.problem.c[b] });
+
+	Mkp res;
+	int k_min = find_k(mkp, lb, true);
+	int k_max = find_k(mkp, lb, false);
+	for (int k = k_min; k <= k_max; k++) {
+		search_tree(mkp, lb, sorted, res);
+	}
+
+	return res;
+}
+
+pair<Mkp, int> variable_fixing(Mkp cur, int lb) {
+	auto lp_res = cur.lp_relaxation();
+	int ub = trunk(lp_res.cost);
+	int cur_cost = 0;
+
+	while (!lp_res.empty()) {
+		const auto& item = lp_res.items.back();
+		if (abs(item.rc) < ub - lb) break;
+
+		if (item.x == 1.0) {
+			cur.set(item.id, IN);
+			cur_cost += cur.problem.c[item.id];
+		} else {
+			cur.set(item.id, OUT);
+		}
+		lp_res.pop_back(items);
+	}
+
+	while (cur.core.size() > 30) {
+		const auto& item = lp_res.items.back();
+
+		auto tmp = cur;
+		int tmp_cost = cur_cost;
+
+		if (item.rc > 0) {
+			tmp.set(item.id, OUT);
+		} else {
+			tmp.set(item.id, IN);
+			tmp_cost += tmp.problem.c[item.id];
+		}
+		for (const auto &t : lp_res.items) {
+			if (abs(t.rc) > ub - lb - abs(item.rc)) {
+				if (t.x == 1.0) {
+					tmp.set(t, IN);
+					tmp_cost += tmp.problem.c[t.id];
+				} else {
+					tmp.set(t, OUT);
+				}	
+			}
+		}
+
+		int z;
+		if (tmp.core.size() > 30) {
+			tie(tmp, z) = variable_fixing(tmp, lb - tmp_cost);
+		} else {
+			tmp = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
+			z = tmp.cost;
+		}
+		if (z + tmp_cost > lb) {
+			lb = z + tmp_cost;
+		} else {
+			if (item.rc > 0) {
+				cur.set(item.id, IN);
+				cur_cost += cur.problem.c[item.id];
+			} else {
+				cur.set(item.id, OUT);
+			}
+			lp_res.pop_back();
+		}
+	}
+
+	return cur, lb;
+}
+
+Mkp solve_optimal(Mkp cur, int lb) {
+	int cur_cost = cur.cost;
+	int z;
+	tie(cur, z) = variable_fixing(cur, lb - cur.cost);
+	lb = max(lb, z + cur_cost);
+
+	auto core = solve_restricted_core_problem(cur.subproblem(), lb - cur.cost);
+	cur.merge(core);
+
+	cur = solve_restricted_core_problem(cur, lb);
+}
+
+Mkp coral(Problem p) {
+	Mkp cur(p), res(p);
+	lp_res = cur.lp_relaxation();
+
+	int ub = trunk(lp_res.cost);
+	for (int j = problem.m; j < problem.n; j++) {
+		const auto& item = lp_res.items[j];
+		if (item.x == 1.0) {
+			cur.set(item.id, IN);
+		} else {
+			cur.set(item.id, OUT);
+		}
+	}
+
+	auto cur_res = solve_optimal(cur, res.cost);
+	if (cur_res.cost > res.cost) {
+		res = cur_res;
+	}
+
+	for (int j = m; j < problem.n; j++) {
+		const auto& item = lp_res.items[j];
+		if (abs(item.rc) >= ub - res.cost) break;
+
+		if (cur.is_n0(item.id)) {
+			cur.set(item.id, OUT);
+		} else {
+			cur.set(item.id, IN);
+		}
+
+		cur_res = solve_optimal(cur, res.cost);
+		if (cur_res.cost > res.cost) {
+			res = cur_res;
+		}
+
+		cur.set(item.id, CORE);
+	}
+
+	return res;
 }
 
 int main() {
-	int n, m;
-	vector<int> c;
-	vector<std::vector<int>> a;
-	vector<int> b;
 
-	cin >> n >> m;
-	c.resize(n);
-	a.resize(m, std::vector<int>(n));
-	b.resize(m);
-
-	for (int i = 0; i < c.size(); ++i) {
-		cin >> c[i];
-	}
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			cin >> a[i][j];
-		}
-		cin >> b[i];
-	}
-
-	solve_lp_relaxation(a, b, c);
-
-	return 0;
 }
