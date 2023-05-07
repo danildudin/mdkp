@@ -14,7 +14,7 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-const int CORE_SIZE = 30;
+const int CORE_SIZE = 4;
 const double EPS = 1e-7;
 
 enum XType {IN, OUT, CORE};
@@ -26,6 +26,11 @@ public:
 		double x, rc;
 	};
 
+	void print() {
+
+	}
+
+public:
 	double cost;
 	vector<Item> items;
 	vector<Item*> items_map;
@@ -53,8 +58,8 @@ public:
 	}
 
 	void print() const {
-		cout << "n:\t" << n;
-		cout << "m:\t" << m;
+		cout << "n:\t" << n << endl;
+		cout << "m:\t" << m << endl;
 		
 		cout << "c:\t";
 		for (auto val : c) {
@@ -427,6 +432,8 @@ void search_tree(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 }
 
 Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
+	if (mkp.core.empty()) return mkp;
+
 	CoreData data{
 		vector<int>(mkp.core.begin(), mkp.core.end()),
 		vector<int>(mkp.core.begin(), mkp.core.end()),
