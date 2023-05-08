@@ -242,7 +242,12 @@ public:
 		}
 
 		glp_load_matrix(lp, n * m, ia, ja, ar);
-		glp_simplex(lp, NULL);
+
+		glp_smcp params;
+		glp_init_smcp(&params);
+		params.msg_lev = GLP_MSG_ERR;
+
+		glp_simplex(lp, &params);
 
 		LPSolution res;
 		res.items_map.resize(problem.n);
@@ -257,7 +262,7 @@ public:
 		return res;
 	}
 
-	void print() const {
+	void print_debug() const {
 		cout << "z:\t" << cost << endl;
 		cout << "feasible:\t" << is_feasible() << endl;
 		cout << "wid:\t";
@@ -289,6 +294,15 @@ public:
 			} else {
 				cout << "E";
 			}
+		}
+		cout << endl;
+	}
+
+	void print() const {
+		cout << cost << endl;
+		cout << n1.size() << endl;
+		for (auto id : n1) {
+			cout << id << " ";
 		}
 		cout << endl;
 	}
@@ -346,7 +360,12 @@ int find_k(const Mkp &mkp, int lb, bool need_min) {
 	}
 
 	glp_load_matrix(lp, n * (m + 1), ia, ja, ar);
-	glp_simplex(lp, NULL);
+
+	glp_smcp params;
+	glp_init_smcp(&params);
+	params.msg_lev = GLP_MSG_ERR;
+
+	glp_simplex(lp, &params);
 
 	int res = need_min ? ceil(glp_get_obj_val(lp)) : trunc(glp_get_obj_val(lp));
 	glp_delete_prob(lp);
@@ -583,6 +602,6 @@ int main() {
 
 	Mkp res = coral(problem);
 
-	problem.print();
+	// problem.print();
 	res.print();
 }
