@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <cmath>
+#include <sstream>
 using namespace std;
 
 /*
@@ -17,7 +18,65 @@ using namespace std;
 const int CORE_SIZE = 4;
 const double EPS = 1e-7;
 
+template<class T>
+void debug_cout(string field_name, const T &value) {
+	cout << "\"" << field_name << "\": " << value << "," << endl;
+}
+
 enum XType {IN, OUT, CORE};
+
+std::ostream& operator<<(std::ostream& os, const XType xtype) {
+	switch (xtype) {
+	case IN: os << "\"IN\"";
+	case OUT: os << "\"OUT\"";
+	case CORE: os << "\"CORE\"";
+	default: os << "\"ERR\"";
+	}
+
+	return os;
+}
+
+template<class T>
+std::ostream& operator<<(std::ostream& os, const vector<T>& arr) {
+    os << "[";
+	for (int i = 0; i < arr.size(); i++) {
+		os << arr[i];
+		if (i + 1 < arr.size()) {
+			os << ", ";
+		}
+	}
+	os << "]";
+
+    return os;
+}
+
+template<class T>
+std::ostream& operator<<(std::ostream& os, const set<T>& s) {
+	os << "[";
+	for (auto it = s.begin(); it != s.end();) {
+		os << *it;
+		if (++it != s.end()) {
+			os << ", ";
+		}
+	}
+	os << "]";
+
+	return os;
+}
+
+template<class K, class V>
+std::ostream& operator<<(std::ostream& os, const map<K, V>& m) {
+	os << "{";
+	for (auto it = m.begin(); it != m.end();) {
+		os << "\"" << it.first << "\": " << it.second;
+		if (++it != m.end()) {
+			os << ", ";
+		}
+	}
+	os << "}";
+
+	return os;
+}
 
 class LPSolution {
 public:
@@ -26,15 +85,21 @@ public:
 		double x, rc;
 	};
 
-	void print() {
-
-	}
-
 public:
 	double cost;
 	vector<Item> items;
 	vector<Item*> items_map;
 };
+
+std::ostream& operator<<(std::ostream& os, const LPSolution::Item& item) {
+    os << "{\"id\": " << item.id << ", \"x\": " << item.x << ", \"rc\": " << item.rc << "}";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const LPSolution& res) {
+    os << "{\"cost\": " << res.cost << ", \"items\": " << res.items << ", \"items_map\": " << res.items_map << "}";
+    return os;
+}
 
 class Problem {
 public:
@@ -57,47 +122,31 @@ public:
 		}
 	}
 
-	void print() const {
-		cout << "n:\t" << n << endl;
-		cout << "m:\t" << m << endl;
-		
-		cout << "c:\t";
-		for (auto val : c) {
-			cout << val << "\t";
-		}
-		cout << endl;
-
-		cout << "b:\t";
-		for (auto val : b) {
-			cout << val << "\t";
-		}
-		cout << endl;
-
-		cout << "a_sum:\t";
-		for (auto val : a_sum) {
-			cout << val << "\t";
-		}
-		cout << endl;
-
-		cout << "a:" << endl;
-		for (const auto &row : a) {
-			for (auto val : row) {
-				cout << val << "\t";
-			}
-			cout << endl;
-		}
-		cout << endl;
-	}
-
 public:
 	int n, m;
 	vector<vector<int>> a;
 	vector<int> c, b, a_sum;
 };
 
+std::ostream& operator<<(std::ostream& os, const Problem& p) {
+    os << "{";
+    os << "\"n\": " << p.n << ", \"m\": " << p.m;
+    os << ", \"c\": " << p.c;
+    os << ", \"b\": " << p.b;
+    os << ", \"a_sum\": " << p.a_sum;
+    os << ", \"a\": " << p.a;
+    os << "}";
+    return os;
+}
+
 class Mkp {
 public:
 	Mkp(Problem& p): problem(p), cost(0), b(problem.b) {
+		b_sum = 0;
+		for (auto val : b) {
+			b_sum += val;
+		}
+
 		weights.resize(problem.m);
 		for (int i = 0; i < problem.n; i++) {
 			core.insert(i);
@@ -193,6 +242,12 @@ public:
 		for (int i = 0; i < b.size(); i++) {
 			res.b[i] = b[i] - weights[i];
 		}
+		res.cost = 0;
+		res.w_sum = 0;
+		res.b_sum = 0;
+		for (auto val : res.b) {
+			res.b_sum += val;
+		}
 
 		return res;
 	}
@@ -254,57 +309,15 @@ public:
 		res.cost = glp_get_obj_val(lp);
 		for (int j = 0; j < n; j++) {
 			res.items.emplace_back(ids[j], glp_get_col_prim(lp, j + 1), glp_get_col_dual(lp, j + 1));
-			res.items_map[ids[j]] = &res.items.back();
 		}
 		sort(res.items.begin(), res.items.end(), [&](const LPSolution::Item &a, const LPSolution::Item &b) { return abs(a.rc) < abs(b.rc); });
+		
+		for (int j = 0; j < n; j++) {
+			res.items_map[res.items[j].id] = &res.items[j];
+		}
 
 		glp_delete_prob(lp);
 		return res;
-	}
-
-	void print_debug() const {
-		cout << "z:\t" << cost << endl;
-		cout << "feasible:\t" << is_feasible() << endl;
-		cout << "wid:\t";
-		for (int i = 0; i < weights.size(); i++) {
-			cout << i << "\t";
-		}
-		cout << endl;
-
-		cout << "w:\t";
-		for (auto w : weights) {
-			cout << w << "\t";
-		}
-		cout << endl;
-
-		cout << "id:\t";
-		for (int j = 0; j < problem.n; j++) {
-			cout << j << "\t";
-		}
-		cout << endl;
-
-		cout << "x:\t";
-		for (int j = 0; j < problem.n; j++) {
-			if (n1.find(j) != n1.end()) {
-				cout << "1\t"; 
-			} else if (n0.find(j) != n0.end()) {
-				cout << "0\t"; 
-			} else if (core.find(j) != core.end()) {
-				cout << "N\t";
-			} else {
-				cout << "E";
-			}
-		}
-		cout << endl;
-	}
-
-	void print() const {
-		cout << cost << endl;
-		cout << n1.size() << endl;
-		for (auto id : n1) {
-			cout << id << " ";
-		}
-		cout << endl;
 	}
 
 public:
@@ -315,11 +328,39 @@ public:
 	vector<int> b;
 };
 
+std::ostream& operator<<(std::ostream& os, const Mkp& mkp) {
+    os << "{";
+    os << "\"cost\": " << mkp.cost;
+    os << ", \"w_sum\": " << mkp.w_sum;
+    os << ", \"b_sum\": " << mkp.b_sum;
+    os << ", \"n0\": " << mkp.n0;
+    os << ", \"n1\": " << mkp.n1;
+    os << ", \"n1\": " << mkp.n1;
+    os << ", \"core\": " << mkp.core;
+    os << ", \"weights\": " << mkp.weights;
+    os << ", \"b\": " << mkp.b;
+    os << ", \"problem\": " << mkp.problem;
+    os << "}";
+
+    return os;
+}
+
 struct CoreData {
 	vector<int> sorted, w_sorted;
 	LPSolution lp_res;
 	int k;
 };
+
+std::ostream& operator<<(std::ostream& os, const CoreData& data) {
+    os << "{";
+    os << "\"k\": " << data.k;
+    os << ", \"sorted\": " << data.sorted;
+    os << ", \"w_sorted\": " << data.w_sorted;
+    os << ", \"lp_res\": " << data.lp_res;
+    os << "}";
+
+    return os;
+}
 
 int find_k(const Mkp &mkp, int lb, bool need_min) {
 	int m = mkp.problem.m;
@@ -374,7 +415,7 @@ int find_k(const Mkp &mkp, int lb, bool need_min) {
 }
 
 bool conditon1(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
-	int sum = 0;
+	int sum = mkp.cost;
 	for (int j = pos + 1; j < min(data.sorted.size(), pos + 1 + data.k - mkp.n1.size()); j++) {
 		sum += mkp.problem.c[data.sorted[j]];
 	}
@@ -385,7 +426,7 @@ bool conditon2(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 	int wsq = 0;
 	int wsq_cnt = 0;
 	for (auto id : data.w_sorted) {
-		if (mkp.core.find(id) != mkp.core.end()) continue;
+		if (id == data.sorted[pos] || mkp.core.find(id) != mkp.core.end()) continue;
 
 		wsq += mkp.problem.a_sum[id];
 		wsq_cnt++;
@@ -423,8 +464,8 @@ bool conditon4(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 bool check_conditons(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 	return conditon1(data, mkp, res, lb, pos)
 		&& conditon2(data, mkp, res, lb, pos)
-		&& conditon3(data, mkp, res, lb, pos)
-		&& conditon4(data, mkp, res, lb, pos);
+		&& conditon3(data, mkp, res, lb, pos);
+		// && conditon4(data, mkp, res, lb, pos);
 }
 
 void search_tree(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
@@ -599,9 +640,21 @@ Mkp coral(Problem problem) {
 int main() {
 	Problem problem;
 	problem.init();
+	cout << "{" << endl;
+	debug_cout("problem", problem);
 
-	Mkp res = coral(problem);
+	// Mkp res = coral(problem);
+	Mkp res(problem);
+	res = solve_restricted_core_problem(res, 0);
 
-	// problem.print();
-	res.print();
+	debug_cout("res", res);
+	cout << "}" << endl;
+
+
+	cout << res.cost << endl;
+	cout << res.n1.size() << endl;
+	for (auto id : res.n1) {
+		cout << id << " ";
+	}
+	cout << endl;
 }
