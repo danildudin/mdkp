@@ -443,9 +443,16 @@ bool condition2(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 }
 
 bool condition3(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
-	double threshold = data.lp_res.cost - lb;
+	double threshold = data.lp_res.cost - mkp.cost;
 	for (auto id : mkp.n1) {
-		threshold -= abs(data.lp_res.items_map[id]->rc);
+		if (data.lp_res.items_map[id]->rc < 0) {
+			threshold -= abs(data.lp_res.items_map[id]->rc);
+		}
+	}
+	for (auto id : mkp.n0) {
+		if (data.lp_res.items_map[id]->rc > 0) {
+			threshold -= abs(data.lp_res.items_map[id]->rc);
+		}
 	}
 	return !(abs(data.lp_res.items_map[data.sorted[pos]]->rc) > threshold);
 }
@@ -471,7 +478,7 @@ bool condition4(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 bool check_conditions(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 	return condition1(data, mkp, res, lb, pos)
 		&& condition2(data, mkp, res, lb, pos)
-		// && condition3(data, mkp, res, lb, pos);
+		&& condition3(data, mkp, res, lb, pos)
 		&& condition4(data, mkp, res, lb, pos);
 }
 
@@ -480,8 +487,6 @@ void search_tree(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 
 	int cur_id = data.sorted[pos];
 	if (mkp.n1.size() >= data.k) {
-		// debug_cout("search_tree ready mkp: ", mkp);
-
 		if (mkp.cost > res.cost) {
 			res = mkp;
 			lb = max(lb, res.cost);
