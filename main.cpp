@@ -15,11 +15,12 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-const int CORE_SIZE = 4;
+const int CORE_SIZE = 10;
 const double EPS = 1e-7;
 
 template<class T>
 void debug_cout(string field_name, const T &value) {
+	return;
 	cout << "\"+++" << field_name << "\": " << value << "," << endl;
 }
 
@@ -92,7 +93,11 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& os, const LPSolution::Item* item) {
-    os << "{\"ptr\": 1, \"id\": " << item->id << ", \"x\": " << item->x << ", \"rc\": " << item->rc << "}";
+	if (!item) {
+		os << "\"NULL\"";
+	} else {
+    	os << "{\"ptr\": 1, \"id\": " << item->id << ", \"x\": " << item->x << ", \"rc\": " << item->rc << "}";
+    }
     return os;
 }
 
@@ -242,16 +247,16 @@ public:
 
 	Mkp subproblem() const {
 		Mkp res(problem);
-		res.core = core;
-		for (int i = 0; i < b.size(); i++) {
-			res.b[i] = b[i] - weights[i];
-		}
 		res.cost = 0;
 		res.w_sum = 0;
 		res.b_sum = 0;
+		for (int i = 0; i < b.size(); i++) {
+			res.b[i] = b[i] - weights[i];
+		}
 		for (auto val : res.b) {
 			res.b_sum += val;
 		}
+		res.core = core;
 
 		return res;
 	}
@@ -339,7 +344,6 @@ std::ostream& operator<<(std::ostream& os, const Mkp& mkp) {
     os << ", \"b_sum\": " << mkp.b_sum;
     os << ", \"n0\": " << mkp.n0;
     os << ", \"n1\": " << mkp.n1;
-    os << ", \"n1\": " << mkp.n1;
     os << ", \"core\": " << mkp.core;
     os << ", \"weights\": " << mkp.weights;
     os << ", \"b\": " << mkp.b;
@@ -397,7 +401,7 @@ int find_k(const Mkp &mkp, int lb, bool need_min) {
 	for (int i = 0; i < m; i++) {
 		glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, mkp.b[i]);
 	}
-	glp_set_row_bnds(lp, m, GLP_LO, lb + 1, 0.0);
+	glp_set_row_bnds(lp, m + 1, GLP_LO, lb, 0.0);
 
 	glp_add_cols(lp, n);
 	for (int j = 0; j < n; j++) {
@@ -506,7 +510,9 @@ void search_tree(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 }
 
 Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
-	if (mkp.core.empty()) return mkp;
+	// debug_cout("solve_restricted_core_problem mkp", mkp);
+
+	if (!mkp.is_feasible() || mkp.core.empty()) return std::move(mkp);
 
 	CoreData data;
 	data.lp_res = mkp.lp_relaxation();
@@ -522,6 +528,10 @@ Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
 	Mkp res = mkp;
 	int k_min = find_k(mkp, lb, true);
 	int k_max = find_k(mkp, lb, false);
+
+	// debug_cout("k_min", k_min);
+	// debug_cout("k_max", k_max);
+
 	for (data.k = k_min; data.k <= k_max; data.k++) {
 		search_tree(data, mkp, res, lb, 0);
 	}
@@ -533,8 +543,10 @@ bool double_equal(double a, double b) {
 	return abs(a - b) < EPS;
 }
 
-pair<Mkp, int> variable_fixing(Mkp mkp, int lb) {
-	if (!mkp.is_feasible()) return make_pair<Mkp, int>(Mkp(mkp.problem), 0);
+pair<Mkp, int> variable_fixing(Mkp mkp, int lb, int depth) {
+	debug_cout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ begin", depth);
+
+	if (!mkp.is_feasible()) return make_pair<Mkp, int>(std::move(mkp), std::move(lb));
 
 	auto lp_res = mkp.lp_relaxation();
 	int ub = trunc(lp_res.cost);
@@ -553,8 +565,14 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb) {
 		lp_res.items.pop_back();
 	}
 
-	while (mkp.core.size() > CORE_SIZE) {
+	while (mkp.core.size() > CORE_SIZE && !lp_res.items.empty()) {
+		debug_cout("========================================================================= begin", depth);
+
 		const auto& item = lp_res.items.back();
+		debug_cout("item: ", item);
+		debug_cout("lb before: ", lb);
+		debug_cout("fixed_cost before: ", fixed_cost);
+		debug_cout("mkp before: ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
 
 		auto tmp = mkp;
 		int tmp_cost = fixed_cost;
@@ -565,7 +583,7 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb) {
 			tmp_cost += tmp.problem.c[item.id];
 		}
 		for (const auto &t : lp_res.items) {
-			if (abs(t.rc) > ub - lb - abs(item.rc)) {
+			if (t.id != item.id && abs(t.rc) > ub - lb - abs(item.rc)) {
 				if (double_equal(t.x, 1.0)) {
 					tmp.set_x(t.id, IN);
 					tmp_cost += tmp.problem.c[t.id];
@@ -574,14 +592,26 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb) {
 				}	
 			}
 		}
+		debug_cout("tmp before: ", vector<set<int>>{tmp.n0, tmp.n1, tmp.core});
+		debug_cout("tmp_cost: ", tmp_cost);
 
-		int z;
+		int z = 0;
 		if (tmp.core.size() > CORE_SIZE) {
-			tie(tmp, z) = variable_fixing(tmp, lb - tmp_cost);
+			tie(tmp, z) = variable_fixing(std::move(tmp), lb - tmp_cost, depth + 1);
+			// auto core = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
+			// z = core.cost;
+			// tmp.merge(core);
 		} else {
-			tmp = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
-			z = tmp.cost;
+			auto core = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
+			z = core.cost;
+			tmp.merge(core);
 		}
+
+		debug_cout("z: ", z);
+		debug_cout("tmp after: ", vector<set<int>>{tmp.n0, tmp.n1, tmp.core});
+
+		debug_cout("mkp after': ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
+
 		if (tmp.is_feasible() && z + tmp_cost > lb) {
 			lb = z + tmp_cost;
 		} else {
@@ -593,20 +623,33 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb) {
 			}
 			lp_res.items.pop_back();
 		}
+
+		debug_cout("lb after: ", lb);
+		debug_cout("fixed_cost after: ", fixed_cost);
+		debug_cout("mkp after: ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
+
+		debug_cout("========================================================================= end", depth);
 	}
 
+	debug_cout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ end", depth);
 	return make_pair<Mkp, int>(std::move(mkp), std::move(lb));
 }
 
 Mkp solve_optimal(Mkp mkp, int lb) {
-	if (!mkp.is_feasible()) return Mkp(mkp.problem);
+	if (!mkp.is_feasible()) return std::move(mkp);
 
 	int z = 0;
 	int cur_cost = mkp.cost;
-	tie(mkp, z) = variable_fixing(mkp, lb - mkp.cost);
+	tie(mkp, z) = variable_fixing(mkp, lb - mkp.cost, 0);
 	lb = max(lb, z + cur_cost);
 
+	debug_cout("solve_optimal lb", lb);
+	debug_cout("solve_optimal mkp", mkp);
+
 	auto core = solve_restricted_core_problem(mkp.subproblem(), lb - mkp.cost);
+
+	debug_cout("solve_optimal core", core);
+
 	if (core.is_feasible()) {
 		mkp.merge(core);
 	}
@@ -621,7 +664,7 @@ Mkp coral(Problem problem) {
 	int ub = trunc(lp_res.cost);
 	for (int j = problem.m; j < problem.n; j++) {
 		const auto& item = lp_res.items[j];
-		if (item.x == 1.0) {
+		if (double_equal(item.x, 1.0)) {
 			mkp.set_x(item.id, IN);
 		} else {
 			mkp.set_x(item.id, OUT);
@@ -638,13 +681,13 @@ Mkp coral(Problem problem) {
 		if (abs(item.rc) >= ub - res.cost) break;
 
 		if (mkp.is_n0(item.id)) {
-			mkp.set_x(item.id, OUT);
-		} else {
 			mkp.set_x(item.id, IN);
+		} else {
+			mkp.set_x(item.id, OUT);
 		}
 
 		cur_res = solve_optimal(mkp, res.cost);
-		if (cur_res.cost > res.cost) {
+		if (cur_res.is_feasible() && cur_res.cost > res.cost) {
 			res = cur_res;
 		}
 
@@ -660,9 +703,12 @@ int main() {
 	// cout << "{" << endl;
 	debug_cout("problem", problem);
 
-	// Mkp res = coral(problem);
-	Mkp res(problem);
-	res = solve_restricted_core_problem(res, 0);
+	Mkp res = coral(problem);
+	// Mkp res(problem);
+	// debug_cout("res", res);
+	// debug_cout("res.subproblem()", res.subproblem());
+
+	// res = solve_optimal(res, 0);
 
 	debug_cout("res", res);
 	// cout << "}" << endl;

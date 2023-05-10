@@ -5,13 +5,14 @@ from random import randint
 T_CNT = 100;
 
 class Solution:
-	def __init__(self, path):
+	def __init__(self, path, problem):
+		self.problem = problem
 		self.z = 0
 		self.x = []
 		self.read(path)
 
 	def __str__(self):
-		return "z: {0}, x: {1}".format(self.z, self.x)
+		return "is_feasible: {0}, z: {1}, x: {2}".format(self.problem.is_feasible(self), self.z, self.x)
 
 	def read(self, path):
 		with open(path, "r") as f:
@@ -60,8 +61,8 @@ def run_test(id):
 	subprocess.run(cmd_str, shell=True)
 
 	problem = Problem(test_in)
-	res_etalon = Solution(test_etalon)
-	res = Solution(test_res)
+	res_etalon = Solution(test_etalon, problem)
+	res = Solution(test_res, problem)
 
 	if res_etalon.z == res.z and problem.is_feasible(res):
 		print("ok")
