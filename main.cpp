@@ -15,7 +15,7 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-const int CORE_SIZE = 10;
+const int CORE_SIZE = 3;
 const double EPS = 1e-7;
 
 template<class T>
@@ -107,7 +107,9 @@ std::ostream& operator<<(std::ostream& os, const LPSolution::Item& item) {
 }
 
 std::ostream& operator<<(std::ostream& os, const LPSolution& res) {
-    os << "{\"cost\": " << res.cost << ", \"items\": " << res.items << ", \"items_map\": " << res.items_map << "}";
+    os << "{\"cost\": " << res.cost << ", \"items\": " << res.items;
+    // os  << ", \"items_map\": " << res.items_map;
+    os << "}";
     return os;
 }
 
@@ -339,7 +341,8 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Mkp& mkp) {
     os << "{";
-    os << "\"cost\": " << mkp.cost;
+    os << "\"is_feasible()\": " << mkp.is_feasible();
+    os << ", \"cost\": " << mkp.cost;
     os << ", \"w_sum\": " << mkp.w_sum;
     os << ", \"b_sum\": " << mkp.b_sum;
     os << ", \"n0\": " << mkp.n0;
@@ -347,7 +350,7 @@ std::ostream& operator<<(std::ostream& os, const Mkp& mkp) {
     os << ", \"core\": " << mkp.core;
     os << ", \"weights\": " << mkp.weights;
     os << ", \"b\": " << mkp.b;
-    os << ", \"problem\": " << mkp.problem;
+    // os << ", \"problem\": " << mkp.problem;
     os << "}";
 
     return os;
@@ -543,18 +546,25 @@ bool double_equal(double a, double b) {
 	return abs(a - b) < EPS;
 }
 
-pair<Mkp, int> variable_fixing(Mkp mkp, int lb, int depth) {
-	debug_cout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ begin", depth);
+pair<Mkp, int> variable_fixing(Mkp mkp, Mkp& res, int lb, string depth) {
+	debug_cout(depth + "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ begin", depth.size());
+	debug_cout(depth + "lb in", lb);
+	debug_cout(depth + "mkp in", mkp);
 
-	if (!mkp.is_feasible()) return make_pair<Mkp, int>(std::move(mkp), std::move(lb));
+	if (!mkp.is_feasible()) {
+		return make_pair<Mkp, int>(std::move(mkp), std::move(lb));
+		debug_cout(depth + "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ begin", depth.size());
+	}
 
 	auto lp_res = mkp.lp_relaxation();
 	int ub = trunc(lp_res.cost);
 	int fixed_cost = 0;
 
+	debug_cout(depth + "lp_res before direct fixing", lp_res);
+
 	while (!lp_res.items.empty()) {
 		const auto& item = lp_res.items.back();
-		if (abs(item.rc) < ub - lb) break;
+		if (!(abs(item.rc) > ub - lb)) break;
 
 		if (double_equal(item.x, 1.0)) {
 			mkp.set_x(item.id, IN);
@@ -565,23 +575,27 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb, int depth) {
 		lp_res.items.pop_back();
 	}
 
-	while (mkp.core.size() > CORE_SIZE && !lp_res.items.empty()) {
-		debug_cout("========================================================================= begin", depth);
+	debug_cout(depth + "mkp after direct fixing", mkp);
+
+	while (mkp.core.size() > CORE_SIZE) {
+		debug_cout(depth + "========================================================================= begin", depth.size());
+		debug_cout(depth + "lp_res", lp_res);
 
 		const auto& item = lp_res.items.back();
-		debug_cout("item: ", item);
-		debug_cout("lb before: ", lb);
-		debug_cout("fixed_cost before: ", fixed_cost);
-		debug_cout("mkp before: ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
+		debug_cout(depth + "item: ", item);
+		debug_cout(depth + "lb before: ", lb);
+		debug_cout(depth + "fixed_cost before: ", fixed_cost);
+		debug_cout(depth + "mkp before: ", mkp);
 
 		auto tmp = mkp;
-		int tmp_cost = fixed_cost;
-		if (item.rc > 0) {
+		int item_cost = 0;
+		if (item.rc > 0){
 			tmp.set_x(item.id, OUT);
 		} else {
+			item_cost = tmp.problem.c[item.id];
 			tmp.set_x(item.id, IN);
-			tmp_cost += tmp.problem.c[item.id];
 		}
+		int tmp_cost = 0;
 		for (const auto &t : lp_res.items) {
 			if (t.id != item.id && abs(t.rc) > ub - lb - abs(item.rc)) {
 				if (double_equal(t.x, 1.0)) {
@@ -592,55 +606,73 @@ pair<Mkp, int> variable_fixing(Mkp mkp, int lb, int depth) {
 				}	
 			}
 		}
-		debug_cout("tmp before: ", vector<set<int>>{tmp.n0, tmp.n1, tmp.core});
-		debug_cout("tmp_cost: ", tmp_cost);
+
+		debug_cout(depth + "tmp before: ", tmp);
+		debug_cout(depth + "tmp_cost: ", tmp_cost);
 
 		int z = 0;
 		if (tmp.core.size() > CORE_SIZE) {
-			tie(tmp, z) = variable_fixing(std::move(tmp), lb - tmp_cost, depth + 1);
-			// auto core = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
-			// z = core.cost;
-			// tmp.merge(core);
+			auto tmp1 = tmp;
+			int new_lb;
+			tie(tmp1, new_lb) = variable_fixing(std::move(tmp1), res, lb - fixed_cost - item_cost - tmp_cost, depth + "\t");
+			lb = max(lb, new_lb + fixed_cost + item_cost + tmp_cost);
+
+			auto core = solve_restricted_core_problem(tmp1.subproblem(), lb - fixed_cost - item_cost - tmp_cost - (tmp1.cost - tmp.cost));
+			z = core.cost + (tmp1.cost - tmp.cost);
+			tmp1.merge(core);
+			tmp = tmp1;
 		} else {
-			auto core = solve_restricted_core_problem(tmp.subproblem(), lb - tmp_cost);
+			auto core = solve_restricted_core_problem(tmp.subproblem(), lb - fixed_cost - item_cost - tmp_cost);
 			z = core.cost;
 			tmp.merge(core);
 		}
 
-		debug_cout("z: ", z);
-		debug_cout("tmp after: ", vector<set<int>>{tmp.n0, tmp.n1, tmp.core});
+		debug_cout(depth + "lb: ", lb);
+		debug_cout(depth + "z: ", z);
+		debug_cout(depth + "fixed_cost: ", fixed_cost);
+		debug_cout(depth + "item_cost: ", item_cost);
+		debug_cout(depth + "tmp_cost: ", tmp_cost);
+		debug_cout(depth + "tmp after: ", tmp);
+		debug_cout(depth + "mkp after': ", mkp);
 
-		debug_cout("mkp after': ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
+		if (tmp.is_feasible() && z + fixed_cost + item_cost + tmp_cost > lb) {
+			debug_cout("res before", res);
+			debug_cout("res after", tmp);
 
-		if (tmp.is_feasible() && z + tmp_cost > lb) {
-			lb = z + tmp_cost;
+			res = tmp;
+			lb = z + fixed_cost + item_cost + tmp_cost;
 		} else {
-			if (item.rc > 0) {
+			if (tmp.is_n1(item.id)) {
+				mkp.set_x(item.id, OUT);
+			} else {
 				mkp.set_x(item.id, IN);
 				fixed_cost += mkp.problem.c[item.id];
-			} else {
-				mkp.set_x(item.id, OUT);
 			}
 			lp_res.items.pop_back();
 		}
 
-		debug_cout("lb after: ", lb);
-		debug_cout("fixed_cost after: ", fixed_cost);
-		debug_cout("mkp after: ", vector<set<int>>{mkp.n0, mkp.n1, mkp.core});
+		debug_cout(depth + "lb after: ", lb);
+		debug_cout(depth + "fixed_cost after: ", fixed_cost);
+		debug_cout(depth + "mkp after: ", mkp);
 
-		debug_cout("========================================================================= end", depth);
+		debug_cout(depth + "========================================================================= end", depth.size());
 	}
 
-	debug_cout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ end", depth);
+	debug_cout(depth + "lb res: ", lb);
+	debug_cout(depth + "mkp res: ", mkp);
+
+	debug_cout(depth + "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ end", depth.size());
 	return make_pair<Mkp, int>(std::move(mkp), std::move(lb));
 }
 
 Mkp solve_optimal(Mkp mkp, int lb) {
 	if (!mkp.is_feasible()) return std::move(mkp);
 
+	Mkp res = mkp;
+
 	int z = 0;
 	int cur_cost = mkp.cost;
-	tie(mkp, z) = variable_fixing(mkp, lb - mkp.cost, 0);
+	tie(mkp, z) = variable_fixing(mkp, res, lb - mkp.cost, "");
 	lb = max(lb, z + cur_cost);
 
 	debug_cout("solve_optimal lb", lb);
@@ -654,7 +686,11 @@ Mkp solve_optimal(Mkp mkp, int lb) {
 		mkp.merge(core);
 	}
 
-	return mkp;
+	if (mkp.is_feasible() && mkp.cost > res.cost) {
+		res = mkp;
+	}
+
+	return res;
 }
 
 Mkp coral(Problem problem) {
@@ -703,12 +739,13 @@ int main() {
 	// cout << "{" << endl;
 	debug_cout("problem", problem);
 
-	Mkp res = coral(problem);
-	// Mkp res(problem);
+	// Mkp res = coral(problem);
+	Mkp res(problem);
 	// debug_cout("res", res);
 	// debug_cout("res.subproblem()", res.subproblem());
 
-	// res = solve_optimal(res, 0);
+	res = solve_optimal(res, 0);
+	// res = solve_restricted_core_problem(res, 0);
 
 	debug_cout("res", res);
 	// cout << "}" << endl;
