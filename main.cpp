@@ -588,22 +588,24 @@ pair<Mkp, int> variable_fixing(Mkp mkp, Mkp& res, int lb, string depth) {
 		debug_cout(depth + "mkp before: ", mkp);
 
 		auto tmp = mkp;
-		int item_cost = 0;
+		int tmp_cost = 0;
 		if (item.rc > 0){
 			tmp.set_x(item.id, OUT);
 		} else {
-			item_cost = tmp.problem.c[item.id];
+			tmp_cost = tmp.problem.c[item.id];
 			tmp.set_x(item.id, IN);
 		}
-		int tmp_cost = 0;
-		for (const auto &t : lp_res.items) {
-			if (t.id != item.id && abs(t.rc) > ub - lb - abs(item.rc)) {
+		for (int j = lp_res.items.size() - 2; j >= 0; j--) {
+			const auto &t = lp_res.items[j];
+			if (abs(t.rc) > ub - lb - abs(item.rc)) {
 				if (double_equal(t.x, 1.0)) {
 					tmp.set_x(t.id, IN);
 					tmp_cost += tmp.problem.c[t.id];
 				} else {
 					tmp.set_x(t.id, OUT);
 				}	
+			} else {
+				break;
 			}
 		}
 
@@ -614,15 +616,15 @@ pair<Mkp, int> variable_fixing(Mkp mkp, Mkp& res, int lb, string depth) {
 		if (tmp.core.size() > CORE_SIZE) {
 			auto tmp1 = tmp;
 			int new_lb;
-			tie(tmp1, new_lb) = variable_fixing(std::move(tmp1), res, lb - fixed_cost - item_cost - tmp_cost, depth + "\t");
-			lb = max(lb, new_lb + fixed_cost + item_cost + tmp_cost);
+			tie(tmp1, new_lb) = variable_fixing(std::move(tmp1), res, lb - fixed_cost - tmp_cost, depth + "\t");
+			lb = max(lb, new_lb + fixed_cost + tmp_cost);
 
-			auto core = solve_restricted_core_problem(tmp1.subproblem(), lb - fixed_cost - item_cost - tmp_cost - (tmp1.cost - tmp.cost));
+			auto core = solve_restricted_core_problem(tmp1.subproblem(), lb - fixed_cost - tmp_cost - (tmp1.cost - tmp.cost));
 			z = core.cost + (tmp1.cost - tmp.cost);
 			tmp1.merge(core);
 			tmp = tmp1;
 		} else {
-			auto core = solve_restricted_core_problem(tmp.subproblem(), lb - fixed_cost - item_cost - tmp_cost);
+			auto core = solve_restricted_core_problem(tmp.subproblem(), lb - fixed_cost - tmp_cost);
 			z = core.cost;
 			tmp.merge(core);
 		}
@@ -630,17 +632,16 @@ pair<Mkp, int> variable_fixing(Mkp mkp, Mkp& res, int lb, string depth) {
 		debug_cout(depth + "lb: ", lb);
 		debug_cout(depth + "z: ", z);
 		debug_cout(depth + "fixed_cost: ", fixed_cost);
-		debug_cout(depth + "item_cost: ", item_cost);
 		debug_cout(depth + "tmp_cost: ", tmp_cost);
 		debug_cout(depth + "tmp after: ", tmp);
 		debug_cout(depth + "mkp after': ", mkp);
 
-		if (tmp.is_feasible() && z + fixed_cost + item_cost + tmp_cost > lb) {
+		if (tmp.is_feasible() && z + fixed_cost + tmp_cost > lb) {
 			debug_cout("res before", res);
 			debug_cout("res after", tmp);
 
 			res = tmp;
-			lb = z + fixed_cost + item_cost + tmp_cost;
+			lb = z + fixed_cost + tmp_cost;
 		} else {
 			if (tmp.is_n1(item.id)) {
 				mkp.set_x(item.id, OUT);
