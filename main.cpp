@@ -15,7 +15,7 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-const int CORE_SIZE = 10;
+const int CORE_SIZE = 5;
 const double EPS = 1e-7;
 
 template<class T>
@@ -360,12 +360,13 @@ struct CoreData {
 	vector<int> sorted, w_sum_sorted;
 	vector<vector<int>> w_sorted;
 	LPSolution lp_res;
-	int k;
+	int k, start_cost;
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreData& data) {
     os << "{";
     os << "\"k\": " << data.k;
+    os << ", \"start_cost\": " << data.start_cost;
     os << ", \"sorted\": " << data.sorted;
     os << ", \"w_sum_sorted\": " << data.w_sum_sorted;
     os << ", \"lp_res\": " << data.lp_res;
@@ -402,9 +403,9 @@ int find_k(const Mkp &mkp, int lb, bool need_min) {
 
 	glp_add_rows(lp, m + 1);
 	for (int i = 0; i < m; i++) {
-		glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, mkp.b[i]);
+		glp_set_row_bnds(lp, i + 1, GLP_UP, 0.0, mkp.b[i] - mkp.weights[i]);
 	}
-	glp_set_row_bnds(lp, m + 1, GLP_LO, lb, 0.0);
+	glp_set_row_bnds(lp, m + 1, GLP_LO, lb - mkp.cost + 1, 0.0);
 
 	glp_add_cols(lp, n);
 	for (int j = 0; j < n; j++) {
@@ -420,10 +421,10 @@ int find_k(const Mkp &mkp, int lb, bool need_min) {
 
 	glp_simplex(lp, &params);
 
-	int res = need_min ? ceil(glp_get_obj_val(lp)) : trunc(glp_get_obj_val(lp));
+	int k = need_min ? ceil(glp_get_obj_val(lp)) : trunc(glp_get_obj_val(lp));
 	glp_delete_prob(lp);
 
-	return res;
+	return mkp.n1.size() + k;
 }
 
 bool condition1(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
@@ -450,14 +451,14 @@ bool condition2(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 }
 
 bool condition3(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
-	double threshold = data.lp_res.cost - mkp.cost;
+	double threshold = data.lp_res.cost - mkp.cost + data.start_cost;
 	for (auto id : mkp.n1) {
-		if (data.lp_res.items_map[id]->rc < 0) {
+		if (data.lp_res.items_map[id] && data.lp_res.items_map[id]->rc < 0) {
 			threshold -= abs(data.lp_res.items_map[id]->rc);
 		}
 	}
 	for (auto id : mkp.n0) {
-		if (data.lp_res.items_map[id]->rc > 0) {
+		if (data.lp_res.items_map[id] && data.lp_res.items_map[id]->rc > 0) {
 			threshold -= abs(data.lp_res.items_map[id]->rc);
 		}
 	}
@@ -513,11 +514,10 @@ void search_tree(const CoreData &data, Mkp &mkp, Mkp &res, int &lb, int pos) {
 }
 
 Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
-	// debug_cout("solve_restricted_core_problem mkp", mkp);
-
 	if (!mkp.is_feasible() || mkp.core.empty()) return std::move(mkp);
 
 	CoreData data;
+	data.start_cost = mkp.cost;
 	data.lp_res = mkp.lp_relaxation();
 	data.sorted = data.w_sum_sorted = vector<int>(mkp.core.begin(), mkp.core.end());
 	sort(data.sorted.begin(), data.sorted.end(), [&](int a, int b) { return mkp.problem.c[a] > mkp.problem.c[b]; });
@@ -529,12 +529,8 @@ Mkp solve_restricted_core_problem(Mkp mkp, int lb) {
 	}
 
 	Mkp res = mkp;
-	int k_min = find_k(mkp, lb, true);
+	int k_min = find_k(mkp, lb , true);
 	int k_max = find_k(mkp, lb, false);
-
-	// debug_cout("k_min", k_min);
-	// debug_cout("k_max", k_max);
-
 	for (data.k = k_min; data.k <= k_max; data.k++) {
 		search_tree(data, mkp, res, lb, 0);
 	}
@@ -588,13 +584,9 @@ Mkp variable_fixing(Mkp mkp, Mkp& res, string depth) {
 		}
 
 		if (tmp.core.size() > CORE_SIZE) {
-			tmp = variable_fixing(std::move(tmp), res, depth + "\t");
-			auto core = solve_restricted_core_problem(tmp.subproblem(), res.cost - tmp.cost);
-			tmp.merge(core);
-		} else {
-			auto core = solve_restricted_core_problem(tmp.subproblem(), res.cost - tmp.cost);
-			tmp.merge(core);
+			tmp = variable_fixing(std::move(tmp), res, depth + "\t");	
 		}
+		tmp = solve_restricted_core_problem(tmp, res.cost);
 
 		if (tmp.is_feasible() && tmp.cost > res.cost) {
 			res = tmp;
@@ -613,10 +605,7 @@ Mkp variable_fixing(Mkp mkp, Mkp& res, string depth) {
 
 void solve_optimal(Mkp mkp, Mkp& res) {
 	mkp = variable_fixing(mkp, res, "");
-	auto core = solve_restricted_core_problem(mkp.subproblem(), res.cost - mkp.cost);
-	if (core.is_feasible()) {
-		mkp.merge(core);
-	}
+	mkp = solve_restricted_core_problem(mkp, res.cost);
 
 	if (mkp.is_feasible() && mkp.cost > res.cost) {
 		res = mkp;
@@ -668,7 +657,7 @@ int main() {
 	// debug_cout("res.subproblem()", res.subproblem());
 
 	// solve_optimal(mkp, res);
-	// res = solve_restricted_core_problem(res, 0);
+	// auto res = solve_restricted_core_problem(Mkp(problem), 0);
 
 	debug_cout("res", res);
 	// cout << "}" << endl;
