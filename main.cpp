@@ -15,7 +15,7 @@ using namespace std;
 41 51 24 40 84 70 34 41 49 27 250
 */
 
-const int CORE_SIZE = 3;
+const int CORE_SIZE = 10;
 const double EPS = 1e-7;
 
 template<class T>
@@ -611,19 +611,9 @@ Mkp variable_fixing(Mkp mkp, Mkp& res, string depth) {
 	return mkp;
 }
 
-Mkp solve_optimal(Mkp mkp, int lb) {
-	if (!mkp.is_feasible()) return std::move(mkp);
-
-	Mkp res = mkp;
+void solve_optimal(Mkp mkp, Mkp& res) {
 	mkp = variable_fixing(mkp, res, "");
-
-	debug_cout("solve_optimal lb", lb);
-	debug_cout("solve_optimal mkp", mkp);
-
 	auto core = solve_restricted_core_problem(mkp.subproblem(), res.cost - mkp.cost);
-
-	debug_cout("solve_optimal core", core);
-
 	if (core.is_feasible()) {
 		mkp.merge(core);
 	}
@@ -631,8 +621,6 @@ Mkp solve_optimal(Mkp mkp, int lb) {
 	if (mkp.is_feasible() && mkp.cost > res.cost) {
 		res = mkp;
 	}
-
-	return res;
 }
 
 Mkp coral(Problem problem) {
@@ -649,10 +637,7 @@ Mkp coral(Problem problem) {
 		}
 	}
 
-	auto cur_res = solve_optimal(mkp, res.cost);
-	if (cur_res.cost > res.cost) {
-		res = cur_res;
-	}
+	solve_optimal(mkp, res);
 
 	for (int j = problem.m; j < problem.n; j++) {
 		const auto& item = lp_res.items[j];
@@ -664,11 +649,7 @@ Mkp coral(Problem problem) {
 			mkp.set_x(item.id, OUT);
 		}
 
-		cur_res = solve_optimal(mkp, res.cost);
-		if (cur_res.is_feasible() && cur_res.cost > res.cost) {
-			res = cur_res;
-		}
-
+		solve_optimal(mkp, res);
 		mkp.set_x(item.id, CORE);
 	}
 
@@ -681,12 +662,12 @@ int main() {
 	// cout << "{" << endl;
 	debug_cout("problem", problem);
 
-	// Mkp res = coral(problem);
-	Mkp res(problem);
+	Mkp res = coral(problem);
+	// Mkp mkp(problem), res(problem);
 	// debug_cout("res", res);
 	// debug_cout("res.subproblem()", res.subproblem());
 
-	res = solve_optimal(res, 0);
+	// solve_optimal(mkp, res);
 	// res = solve_restricted_core_problem(res, 0);
 
 	debug_cout("res", res);
