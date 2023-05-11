@@ -33,13 +33,11 @@ class Problem:
 
 	def read(self, path):
 		with open(path, "r") as f:
-			n, m = list(map(int, f.readline().split()))
+			n, m, real_ans = list(map(int, f.readline().split()))
 			self.c = list(map(int, f.readline().split()))
 			for i in range(0, m):
-				row = list(map(int, f.readline().split()))
-				self.b.append(row[-1])
-				row.pop()
-				self.a.append(row)
+				self.a.append(list(map(int, f.readline().split())))
+			b = list(map(int, f.readline().split()))
 
 	def is_feasible(self, res):
 		for i in range(0, len(self.b)):

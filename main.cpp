@@ -93,7 +93,8 @@ std::ostream& operator<<(std::ostream& os, const LPSolution& res) {
 
 struct Problem {
 	void init() {
-		cin >> n >> m;
+		int real_ans;
+		cin >> n >> m >> real_ans;
 
 		a.resize(m, vector<int>(n));
 		a_sum.resize(n);
@@ -107,6 +108,8 @@ struct Problem {
 				cin >> a[i][j];
 				a_sum[j] += a[i][j];
 			}
+		}
+		for (int i = 0; i < m; i++) {
 			cin >> b[i];
 		}
 	}
