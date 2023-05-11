@@ -1,6 +1,7 @@
 import sys
 import subprocess
 from random import randint
+from time import time
 
 T_CNT = 1000;
 
@@ -50,15 +51,17 @@ class Problem:
 				return False
 		return True
 
-def run_test(id):
-	test_in = "tests/{:03d}.in".format(id)
-	test_etalon = "tests/{:03d}.out".format(id)
-	test_res = "tests/{:03d}.res".format(id)
+def run_test(id, path):
+	test_in = path + "/{:03d}.in".format(id)
+	test_etalon = path + "/{:03d}.out".format(id)
+	test_res = path + "/{:03d}.res".format(id)
 
 	print(test_in + "\t", end="")
 
 	cmd_str = "./mdkp.out < {0} > {1}".format(test_in, test_res)
+	start_time = time()
 	subprocess.run(cmd_str, shell=True)
+	print("{:.4f}\t".format(time() - start_time), end="")
 
 	problem = Problem(test_in)
 	res_etalon = Solution(test_etalon, problem)
@@ -71,5 +74,18 @@ def run_test(id):
 		print("expected: ", res_etalon)
 		print("got: ", res)
 
-for i in range(0, T_CNT):
-	run_test(i);
+if __name__ == "__main__":
+	path = "tests/small"
+	if len(sys.argv) > 1 and sys.argv[1] != "":
+		path = sys.argv[1]
+
+	start = 0
+	if len(sys.argv) > 2 and sys.argv[2] != "":
+		start = int(sys.argv[2])
+
+	end = T_CNT
+	if len(sys.argv) > 3 and sys.argv[3] != "":
+		end = int(sys.argv[3])
+
+	for i in range(start, end):
+		run_test(i, path);
