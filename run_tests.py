@@ -2,7 +2,7 @@ import sys
 import subprocess
 from random import randint
 
-T_CNT = 100;
+T_CNT = 1000;
 
 class Solution:
 	def __init__(self, path, problem):
@@ -51,9 +51,9 @@ class Problem:
 		return True
 
 def run_test(id):
-	test_in = "tests/{:02d}.in".format(id)
-	test_etalon = "tests/{:02d}.out".format(id)
-	test_res = "tests/{:02d}.res".format(id)
+	test_in = "tests/{:03d}.in".format(id)
+	test_etalon = "tests/{:03d}.out".format(id)
+	test_res = "tests/{:03d}.res".format(id)
 
 	print(test_in + "\t", end="")
 

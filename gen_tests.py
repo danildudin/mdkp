@@ -3,16 +3,16 @@ import subprocess
 from random import randint
 
 T_CNT = 100;
-N_MIN = 10;
-N_MAX = 25;
-M_MIN = 1;
-M_MAX = 8;
+N_MIN = 50;
+N_MAX = 50;
+M_MIN = 10;
+M_MAX = 30;
 C_MIN = 1;
 C_MAX = 1000;
 W_MIN = 1;
 W_MAX = 1000;
-B_MIN = 1000;
-B_MAX = 6500;
+B_MIN = 1;
+B_MAX = 100000;
 
 def gen_test(id):
 	n = randint(N_MIN, N_MAX)
@@ -20,10 +20,10 @@ def gen_test(id):
 	
 	c = [randint(C_MIN, C_MAX) for j in range(0, n)]
 	b = [randint(B_MIN, B_MAX) for i in range(0, m)]
-	a = [[randint(W_MIN, W_MAX) for j in range(0, n)] for i in range(0, m)]
+	a = [[randint(W_MIN, min(b[i], W_MAX)) for j in range(0, n)] for i in range(0, m)]
 
-	test_in = "tests/{:02d}.in".format(id)
-	test_out = "tests/{:02d}.out".format(id)
+	test_in = "tests/{:03d}.in".format(id)
+	test_out = "tests/{:03d}.out".format(id)
 
 	print(test_in)
 
@@ -38,9 +38,16 @@ def gen_test(id):
 			f.write(str(b[i]))	
 			f.write("\n")
 
-	cmd_str = "./mdkp_simple.out < {0} > {1}".format(test_in, test_out)
+	cmd_str = "./mdkp.out < {0} > {1}".format(test_in, test_out)
 	subprocess.run(cmd_str, shell=True)
 
+if __name__ == "__main__":
+	start = 0
+	if len(sys.argv) > 1 and sys.argv[1] != "":
+		start = int(sys.argv[1])
+	end = T_CNT
+	if len(sys.argv) > 2 and sys.argv[2] != "":
+		end = int(sys.argv[2])
 
-for i in range(0, T_CNT):
-	gen_test(i);
+	for i in range(start, end):
+		gen_test(i);
