@@ -127,12 +127,12 @@ std::ostream& operator<<(std::ostream& os, const Problem& p) {
     return os;
 }
 
-enum XType {IN, OUT, CORE};
+enum XType {N1, N0, CORE, LAST = CORE};
 
 std::ostream& operator<<(std::ostream& os, const XType xtype) {
 	switch (xtype) {
-	case IN: os << "\"IN\"";
-	case OUT: os << "\"OUT\"";
+	case N1: os << "\"N1\"";
+	case N0: os << "\"N0\"";
 	case CORE: os << "\"CORE\"";
 	default: os << "\"ERR\"";
 	}
@@ -142,14 +142,10 @@ std::ostream& operator<<(std::ostream& os, const XType xtype) {
 
 class Mdkp {
 public:
-	Mdkp(Problem& p): problem(p), cost(0), w_sum(0), b_sum(0), b(problem.b) {
+	Mdkp(Problem& p): problem(p), cost(0), w_sum(0), x(problem.n, CORE), n_size(LAST + 1), b_sum(0), b(problem.b), weights(problem.m) {
+		n_size[CORE] = problem.n;
 		for (auto val : b) {
 			b_sum += val;
-		}
-
-		weights.resize(problem.m);
-		for (int i = 0; i < problem.n; i++) {
-			core.insert(i);
 		}
 	}
 
@@ -158,72 +154,56 @@ public:
 		cost = other.cost;
 		w_sum = other.w_sum;
 		b_sum = other.b_sum;
-		n0 = other.n0;
-		n1 = other.n1;
-		core = other.core;
-		weights = other.weights;
+		n_size = other.n_size;
+		x = other.x;
 		b = other.b;
+		weights = other.weights;
 
 		return *this;
 	}
 
-	void set_x(int id, XType type) {
-		if (type == IN) {
-			if (n1.find(id) != n1.end()) return;
+	vector<int> get_list(XType type) const {
+		vector<int> res;
+		for (int j = 0; j < x.size(); j++) {
+			if (x[j] == type) res.push_back(j);
+		}
+		return res;
+	}
 
+	void set_x(int id, XType type) {
+		if (x[id] == type) return;
+
+		if (type == N1) {
 			cost += problem.c[id];
 			w_sum = 0;
 			for (int i = 0; i < problem.m; i++) {
 				weights[i] += problem.a[i][id];
 				w_sum += weights[i];
 			}
-
-			n1.insert(id);
-			n0.erase(id);
-			core.erase(id);
-		} else if (type == OUT) {
-			if (n0.find(id) != n0.end()) return;
-
-			if (n1.find(id) != n1.end()) {
-				cost -= problem.c[id];
-				w_sum = 0;
-				for (int i = 0; i < problem.m; i++) {
-					weights[i] -= problem.a[i][id];
-					w_sum += weights[i];
-				}
+		} else if (x[id] == N1) {
+			cost -= problem.c[id];
+			w_sum = 0;
+			for (int i = 0; i < problem.m; i++) {
+				weights[i] -= problem.a[i][id];
+				w_sum += weights[i];
 			}
-
-			n0.insert(id);
-			n1.erase(id);
-			core.erase(id);
-		} else {
-			if (core.find(id) != core.end()) return;
-
-			if (n1.find(id) != n1.end()) {
-				cost -= problem.c[id];
-				w_sum = 0;
-				for (int i = 0; i < problem.m; i++) {
-					weights[i] -= problem.a[i][id];
-					w_sum += weights[i];
-				}
-			}
-
-			n0.erase(id);
-			n1.erase(id);
-			core.insert(id);
 		}
+
+		n_size[x[id]]--;
+		n_size[type]++;
+		x[id] = type;
 	}
 
 	bool is_n0(int id) {
-		return n0.find(id) != n0.end();
+		return x[id] == N0;
 	}
 
 	bool is_n1(int id) {
-		return n1.find(id) != n1.end();
+		return x[id] == N1;
 	}
 
 	bool is_core(int id) {
-		return core.find(id) != core.end();
+		return x[id] == CORE;
 	}
 
 	bool is_feasible() const {
@@ -238,8 +218,8 @@ public:
 
 	LPSolution lp_relaxation() const {
 		int m = problem.m;
-		int n = core.size();
-		vector<int> ids(core.begin(), core.end());
+		int n = n_size[CORE];
+		vector<int> ids = get_list(CORE);
 
 		int* ia = new int[1 + n * m];
 		int* ja = new int[1 + n * m];
@@ -295,20 +275,18 @@ public:
 public:
 	Problem& problem;
 	int cost, w_sum, b_sum;
-	set<int> n0, n1, core;
-	vector<int> weights;
-	vector<int> b;
+	vector<XType> x;
+	vector<int> b, weights, n_size;
 };
 
 std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp) {
     os << "{";
     os << "\"is_feasible()\": " << mdkp.is_feasible();
     os << ", \"cost\": " << mdkp.cost;
+    os << ", \"n_size\": " << mdkp.n_size;
+    os << ", \"x\": " << mdkp.x;
     os << ", \"w_sum\": " << mdkp.w_sum;
     os << ", \"b_sum\": " << mdkp.b_sum;
-    os << ", \"n0\": " << mdkp.n0;
-    os << ", \"n1\": " << mdkp.n1;
-    os << ", \"core\": " << mdkp.core;
     os << ", \"weights\": " << mdkp.weights;
     os << ", \"b\": " << mdkp.b;
     os << ", \"problem\": " << mdkp.problem;
@@ -323,7 +301,7 @@ struct CoreData {
 		start_cost = mdkp.cost;
 		lp_res = mdkp.lp_relaxation();
 
-		sorted = w_sum_sorted = vector<int>(mdkp.core.begin(), mdkp.core.end());
+		sorted = w_sum_sorted = mdkp.get_list(CORE);
 		sort(sorted.begin(), sorted.end(), [&](int a, int b) { return mdkp.problem.c[a] > mdkp.problem.c[b]; });
 		sort(w_sum_sorted.begin(), w_sum_sorted.end(), [&](int a, int b) { return mdkp.problem.a_sum[a] < mdkp.problem.a_sum[b]; });
 		for (int i = 0; i < mdkp.problem.m; i++) {
@@ -353,8 +331,8 @@ std::ostream& operator<<(std::ostream& os, const CoreData& data) {
 
 int find_k(const Mdkp &mdkp, int lb, bool need_min) {
 	int m = mdkp.problem.m;
-	int n = mdkp.core.size();
-	vector<int> ids(mdkp.core.begin(), mdkp.core.end());
+	int n = mdkp.n_size[CORE];
+	vector<int> ids = mdkp.get_list(CORE);;
 
 	int* ia = new int[1 + n * (m + 1)];
 	int* ja = new int[1 + n * (m + 1)];
@@ -400,12 +378,12 @@ int find_k(const Mdkp &mdkp, int lb, bool need_min) {
 	int k = need_min ? ceil(glp_get_obj_val(lp)) : trunc(glp_get_obj_val(lp));
 	glp_delete_prob(lp);
 
-	return mdkp.n1.size() + k;
+	return mdkp.n_size[N1] + k;
 }
 
 bool condition1(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) {
 	int sum = mdkp.cost + mdkp.problem.c[data.sorted[pos]];
-	for (int j = pos + 1; j < min(data.sorted.size(), pos + 1 + data.k - mdkp.n1.size()); j++) {
+	for (int j = pos + 1; j < min(int(data.sorted.size()), pos + 1 + data.k - mdkp.n_size[N1]); j++) {
 		sum += mdkp.problem.c[data.sorted[j]];
 	}
 	return !(sum < lb);
@@ -416,8 +394,8 @@ bool condition2(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) {
 	int cnt = 0;
 
 	for (auto id : data.w_sum_sorted) {
-		if (cnt >= data.k - mdkp.n1.size() - 1) break;
-		if (id == data.sorted[pos] || mdkp.core.find(id) == mdkp.core.end()) continue;
+		if (cnt >= data.k - mdkp.n_size[N1] - 1) break;
+		if (id == data.sorted[pos] || !mdkp.is_core(id)) continue;
 
 		sum += mdkp.problem.a_sum[id];
 		cnt++;
@@ -428,12 +406,12 @@ bool condition2(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) {
 
 bool condition3(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) {
 	double threshold = data.lp_res.cost - mdkp.cost + data.start_cost;
-	for (auto id : mdkp.n1) {
+	for (auto id : mdkp.get_list(N1)) {
 		if (data.lp_res.items_map[id] && data.lp_res.items_map[id]->rc < 0) {
 			threshold -= abs(data.lp_res.items_map[id]->rc);
 		}
 	}
-	for (auto id : mdkp.n0) {
+	for (auto id : mdkp.get_list(N0)) {
 		if (data.lp_res.items_map[id] && data.lp_res.items_map[id]->rc > 0) {
 			threshold -= abs(data.lp_res.items_map[id]->rc);
 		}
@@ -446,8 +424,8 @@ bool condition4(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) {
 		int sum = mdkp.weights[i] + mdkp.problem.a[i][data.sorted[pos]];
 		int cnt = 0;
 		for (auto id : data.w_sorted[i]) {
-			if (cnt >= data.k - mdkp.n1.size() - 1) break;
-			if (id == data.sorted[pos] || mdkp.core.find(id) == mdkp.core.end()) continue;
+			if (cnt >= data.k - mdkp.n_size[N1] - 1) break;
+			if (id == data.sorted[pos] || !mdkp.is_core(id)) continue;
 
 			sum += mdkp.problem.a[i][id];
 			cnt++;
@@ -470,27 +448,27 @@ void search_tree(const CoreData &data, Mdkp &mdkp, Mdkp &res, int &lb, int pos) 
 	if (!mdkp.is_feasible()) return;
 
 	int cur_id = data.sorted[pos];
-	if (mdkp.n1.size() >= data.k) {
+	if (mdkp.n_size[N1] >= data.k) {
 		if (mdkp.cost > res.cost) {
 			res = mdkp;
 			lb = max(lb, res.cost);
 		}
 		return;
 	}
-	if (mdkp.core.empty()) return;
-	if (mdkp.n1.size() + data.sorted.size() - pos < data.k) return;
+	if (mdkp.n_size[CORE] == 0) return;
+	if (mdkp.n_size[N1] + data.sorted.size() - pos < data.k) return;
 
 	if (check_conditions(data, mdkp, res, lb, pos)) {
-		mdkp.set_x(cur_id, IN);
+		mdkp.set_x(cur_id, N1);
 		search_tree(data, mdkp, res, lb, pos + 1);
 	}
-	mdkp.set_x(cur_id, OUT);
+	mdkp.set_x(cur_id, N0);
 	search_tree(data, mdkp, res, lb, pos + 1);
 	mdkp.set_x(cur_id, CORE);
 }
 
 Mdkp solve_restricted_core_problem(Mdkp mdkp, int lb) {
-	if (!mdkp.is_feasible() || mdkp.core.empty()) return std::move(mdkp);
+	if (!mdkp.is_feasible() || mdkp.n_size[CORE] == 0) return std::move(mdkp);
 
 	CoreData data(mdkp);
 
@@ -520,34 +498,34 @@ Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, string depth) {
 		if (!(abs(item.rc) > ub - res.cost + start_cost)) break;
 
 		if (double_equal(item.x, 1.0)) {
-			mdkp.set_x(item.id, IN);
+			mdkp.set_x(item.id, N1);
 		} else {
-			mdkp.set_x(item.id, OUT);
+			mdkp.set_x(item.id, N0);
 		}
 		lp_res.items.pop_back();
 	}
 
-	while (mdkp.core.size() > CORE_SIZE) {
+	while (mdkp.n_size[CORE] > CORE_SIZE) {
 		const auto& item = lp_res.items.back();
 
 		auto tmp = mdkp;
 		if (item.rc > 0){
-			tmp.set_x(item.id, OUT);
+			tmp.set_x(item.id, N0);
 		} else {
-			tmp.set_x(item.id, IN);
+			tmp.set_x(item.id, N1);
 		}
 		for (int j = lp_res.items.size() - 2; j >= 0; j--) {
 			const auto &t = lp_res.items[j];
 			if (!(abs(t.rc) > ub - res.cost + start_cost - abs(item.rc))) break;
 
 			if (double_equal(t.x, 1.0)) {
-				tmp.set_x(t.id, IN);
+				tmp.set_x(t.id, N1);
 			} else {
-				tmp.set_x(t.id, OUT);
+				tmp.set_x(t.id, N0);
 			}	
 		}
 
-		if (tmp.core.size() > CORE_SIZE) {
+		if (tmp.n_size[CORE] > CORE_SIZE) {
 			tmp = variable_fixing(std::move(tmp), res, depth + "\t");	
 		}
 		tmp = solve_restricted_core_problem(std::move(tmp), res.cost);
@@ -556,9 +534,9 @@ Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, string depth) {
 			res = std::move(tmp);
 		} else {
 			if (tmp.is_n1(item.id)) {
-				mdkp.set_x(item.id, OUT);
+				mdkp.set_x(item.id, N0);
 			} else {
-				mdkp.set_x(item.id, IN);
+				mdkp.set_x(item.id, N1);
 			}
 			lp_res.items.pop_back();
 		}
@@ -583,9 +561,9 @@ Mdkp coral(Problem problem) {
 	for (int j = problem.m; j < problem.n; j++) {
 		const auto& item = lp_res.items[j];
 		if (double_equal(item.x, 1.0)) {
-			mdkp.set_x(item.id, IN);
+			mdkp.set_x(item.id, N1);
 		} else {
-			mdkp.set_x(item.id, OUT);
+			mdkp.set_x(item.id, N0);
 		}
 	}
 
@@ -595,9 +573,9 @@ Mdkp coral(Problem problem) {
 		if (abs(item.rc) >= ub - res.cost) break;
 
 		if (mdkp.is_n0(item.id)) {
-			mdkp.set_x(item.id, IN);
+			mdkp.set_x(item.id, N1);
 		} else {
-			mdkp.set_x(item.id, OUT);
+			mdkp.set_x(item.id, N0);
 		}
 
 		solve_optimal(mdkp, res);
@@ -614,8 +592,8 @@ int main() {
 	Mdkp res = coral(problem);
 
 	cout << res.cost << endl;
-	cout << res.n1.size() << endl;
-	for (auto id : res.n1) {
+	cout << res.n_size[N1] << endl;
+	for (auto id : res.get_list(N1)) {
 		cout << id << " ";
 	}
 	cout << endl;
