@@ -56,7 +56,7 @@ def run_test(id, path):
 
 	print(test_in + "\t", end="")
 
-	cmd_str = "./mdkp.out < {0} > {1}".format(test_in, test_res)
+	cmd_str = "./coral_concurrent.out < {0} > {1}".format(test_in, test_res)
 	start_time = time()
 	subprocess.run(cmd_str, shell=True)
 	print("{:.4f}\t".format(time() - start_time), end="")

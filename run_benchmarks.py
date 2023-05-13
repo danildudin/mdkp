@@ -8,7 +8,7 @@ def run_test(test_path):
 	test_res = test_path + "_res"
 
 	print(test_path + "\t", end="")
-	cmd_str = "./mdkp.out < {0} > {1}".format(test_path, test_res)
+	cmd_str = "./coral_concurrent.out < {0} > {1}".format(test_path, test_res)
 	start_time = time.time()
 	subprocess.run(cmd_str, shell=True)
 	print("{:.4f}\t".format(time.time() - start_time))
