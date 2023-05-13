@@ -10,6 +10,7 @@
 #include <chrono>
 #include <mutex>
 #include <boost/asio.hpp>
+#include <thread>
 using namespace std;
 
 const int CORE_SIZE = 10;
@@ -636,9 +637,20 @@ Mdkp coral(Problem problem) {
 	}
 
 	// boost::asio::thread_pool pool(1);
-	solve_optimal(mdkp, &res);
+	// boost::basic_thread_pool pool(2);
+	vector<thread> threads;
+
+	threads.emplace_back(solve_optimal, mdkp, &res);
 	// boost::asio::post(pool, [&](){ solve_optimal(mdkp, &res); });
+	// pool.wait();
 	for (int j = problem.m; j < problem.n; j++) {
+		if (threads.size() >= 32) {
+			for (auto &thread : threads) {
+				thread.join();
+			}
+			threads.clear();
+		}
+
 		const auto& item = lp_res.items[j];
 		if (abs(item.rc) >= ub - res.cost) break;
 
@@ -648,10 +660,16 @@ Mdkp coral(Problem problem) {
 			mdkp.set_x(item.id, N0);
 		}
 
-		solve_optimal(mdkp, &res);
+		threads.emplace_back(solve_optimal, mdkp, &res);
 		// boost::asio::post(pool, [&](){ solve_optimal(mdkp, &res); });
+		// pool.wait();
 		mdkp.set_x(item.id, CORE);
 	}
+	for (auto &thread : threads) {
+		thread.join();
+	}
+	threads.clear();
+
 	// pool.join();
 
 	return res;
