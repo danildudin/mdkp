@@ -9,7 +9,6 @@
 #include <atomic>
 #include <chrono>
 #include <mutex>
-#include <boost/asio.hpp>
 #include <thread>
 using namespace std;
 
@@ -319,24 +318,22 @@ public:
 		return res;
 	}
 
-	bool compare_and_set(const Mdkp& other) {
-		scoped_lock(mu);
-
-		if (cost >= other.cost) return false;
-		*this = other;
-
-		return true;
-	}
-
 public:
-	mutex mu;
-
 	Problem& problem;
 	atomic_int cost;
 	int w_sum, b_sum;
 	vector<XType> x;
 	vector<int> b, weights, n_size;
 };
+
+mutex mu;
+bool compare_and_set(Mdkp& res, const Mdkp& other) {
+	scoped_lock lock(mu);
+
+	if (res.cost >= other.cost) return false;
+	res = other;
+	return true;
+}
 
 std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp) {
     os << "{";
@@ -550,9 +547,6 @@ bool double_equal(double a, double b) {
 	return abs(a - b) < EPS;
 }
 
-// res.cost сделать атомарным
-// res = tmp сделать атомарным
-// 
 Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, string depth) {
 	metadata.variable_fixing++;
 
@@ -599,7 +593,7 @@ Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, string depth) {
 		}
 		tmp = solve_restricted_core_problem(std::move(tmp), res.cost);
 
-		if (!tmp.is_feasible() || !res.compare_and_set(tmp)) {
+		if (!tmp.is_feasible() || !compare_and_set(res, tmp)) {
 			if (tmp.is_n1(item.id)) {
 				mdkp.set_x(item.id, N0);
 			} else {
@@ -618,7 +612,7 @@ void solve_optimal(Mdkp mdkp, Mdkp* res) {
 	mdkp = variable_fixing(std::move(mdkp), *res, "");
 	mdkp = solve_restricted_core_problem(std::move(mdkp), res->cost);
 	if (mdkp.is_feasible()) {
-		res->compare_and_set(mdkp);
+		compare_and_set(*res, mdkp);
 	}
 }
 
@@ -636,15 +630,10 @@ Mdkp coral(Problem problem) {
 		}
 	}
 
-	// boost::asio::thread_pool pool(1);
-	// boost::basic_thread_pool pool(2);
 	vector<thread> threads;
-
 	threads.emplace_back(solve_optimal, mdkp, &res);
-	// boost::asio::post(pool, [&](){ solve_optimal(mdkp, &res); });
-	// pool.wait();
 	for (int j = problem.m; j < problem.n; j++) {
-		if (threads.size() >= 32) {
+		if (threads.size() >= 31) {
 			for (auto &thread : threads) {
 				thread.join();
 			}
@@ -659,18 +648,14 @@ Mdkp coral(Problem problem) {
 		} else {
 			mdkp.set_x(item.id, N0);
 		}
-
-		threads.emplace_back(solve_optimal, mdkp, &res);
-		// boost::asio::post(pool, [&](){ solve_optimal(mdkp, &res); });
-		// pool.wait();
+		if (mdkp.is_feasible()) {
+			threads.emplace_back(solve_optimal, mdkp, &res);
+		}
 		mdkp.set_x(item.id, CORE);
 	}
 	for (auto &thread : threads) {
 		thread.join();
 	}
-	threads.clear();
-
-	// pool.join();
 
 	return res;
 }
