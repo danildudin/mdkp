@@ -1,9 +1,9 @@
-import sys
+import argparse
+import os
+import re
 import subprocess
-from random import randint
-from time import time
-
-T_CNT = 1000;
+import sys
+import time
 
 class Solution:
 	def __init__(self, path, problem):
@@ -49,41 +49,51 @@ class Problem:
 				return False
 		return True
 
-def run_test(id, path):
-	test_in = path + "/{:03d}.in".format(id)
-	test_etalon = path + "/{:03d}.out".format(id)
-	test_res = path + "/{:03d}.res".format(id)
+def run_test(file_name, args):
+	test_in = args.path + "/" + file_name
+	test_res = test_in + "_res"
+	test_etalon = test_in + "_etalon"
+	cmd_str = args.command + " < {0} > {1}".format(test_in, test_res)
 
 	print(test_in + "\t", end="")
-
-	cmd_str = "./coral_concurrent.out < {0} > {1}".format(test_in, test_res)
-	start_time = time()
+	start_time = time.time()
 	subprocess.run(cmd_str, shell=True)
-	print("{:.4f}\t".format(time() - start_time), end="")
+	print("{:.4f}\t".format(time.time() - start_time), end="")
 
-	problem = Problem(test_in)
-	res_etalon = Solution(test_etalon, problem)
-	res = Solution(test_res, problem)
+	if args.write_etalon:
+		subprocess.run("cp {0} {1}".format(test_res, test_etalon), shell=True)
+		print()
+	elif not args.skip_checks:
+		problem = Problem(test_in)
+		res_etalon = Solution(test_etalon, problem)
+		res = Solution(test_res, problem)
 
-	if res_etalon.z == res.z and problem.is_feasible(res):
-		print("ok")
+		if res_etalon.z == res.z and problem.is_feasible(res):
+			print("ok")
+		else:
+			print("not ok")
+			print("expected: ", res_etalon)
+			print("got: ", res)
 	else:
-		print("not ok")
-		print("expected: ", res_etalon)
-		print("got: ", res)
+		print()
 
 if __name__ == "__main__":
-	path = "tests/small"
-	if len(sys.argv) > 1 and sys.argv[1] != "":
-		path = sys.argv[1]
+	parser = argparse.ArgumentParser(description='Test mdkp.')
+	parser.add_argument('-c', '--command', required=True, help='mdkp binary')
+	parser.add_argument('-p', '--path', required=True, help='path to tests directory')
+	parser.add_argument('-f', '--filter', help='regexp filter for test files')
+	parser.add_argument('-s', '--skip_checks', action='store_true', help='skip comparing result with etalon')
+	parser.add_argument('-w', '--write_etalon', action='store_true', help='write answer to etalon')
+	parser.add_argument('-l', '--list', action='store_true', help='show list of tests')
+	args = parser.parse_args()
 
-	start = 0
-	if len(sys.argv) > 2 and sys.argv[2] != "":
-		start = int(sys.argv[2])
+	regex = None
+	if args.filter:
+		regex = re.compile(args.filter)
 
-	end = T_CNT
-	if len(sys.argv) > 3 and sys.argv[3] != "":
-		end = int(sys.argv[3])
-
-	for i in range(start, end):
-		run_test(i, path);
+	for file in os.listdir(args.path):
+		if regex == None or regex.match(file):
+			if args.list:
+				print(file)
+			else:
+				run_test(file, args)
