@@ -616,7 +616,9 @@ void solve_optimal(Mdkp mdkp, Mdkp* res) {
 
 	mdkp = variable_fixing(std::move(mdkp), *res, "");
 	mdkp = solve_restricted_core_problem(std::move(mdkp), res->cost);
-	res->compare_and_set(mdkp);
+	if (mdkp.is_feasible()) {
+		res->compare_and_set(mdkp);
+	}
 }
 
 Mdkp coral(Problem problem) {
