@@ -60,7 +60,7 @@ class TestRunner:
 		if self.args.filter:
 			regex = re.compile(self.args.filter)
 
-		for file in os.listdir(self.args.path):
+		for file in sorted(os.listdir(self.args.path)):
 			if regex == None or regex.match(file):
 				if self.args.list:
 					print(file)
@@ -101,6 +101,9 @@ class TestRunner:
 			print()
 
 	def print_stat(self):
+		if args.list:
+			return;
+
 		print("tests cnt: {0}".format(len(self.exec_time)))
 		print("ok: {0}".format(len(self.exec_time) - self.not_ok_cnt))
 		print("not ok: {0}".format(self.not_ok_cnt))

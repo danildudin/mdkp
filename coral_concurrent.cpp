@@ -10,6 +10,8 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <getopt.h>
+#include <memory>
 using namespace std;
 
 const int CORE_SIZE = 10;
@@ -660,19 +662,131 @@ Mdkp coral(Problem problem) {
 	return res;
 }
 
-int main() {
-	Problem problem;
-	problem.init();
+struct CMDArgs {
+	enum SolverType {CORAL, LAST = CORAL};
 
-	metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	Mdkp res = coral(problem);
-	metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - metadata.duration_time;
+	void parse_args(int argc, char **argv) {
+		struct option long_options[] = {
+            {"solver_type", required_argument, 0, 0},
+            {"thread_count", required_argument, 0, 0},
+            {"core_size", required_argument, 0, 0},
+            {0, 0, 0, 0}
+        };
 
-	cout << res.cost << endl;
-	cout << res.n_size[N1] << endl;
-	for (auto id : res.get_list(N1)) {
-		cout << id << " ";
+		int c = 0, option_index = 0;
+	    while (true) {
+	        c = getopt_long(argc, argv, "", long_options, &option_index);
+	        if (c == -1) break;
+	        if (c != 0) continue;
+
+	        string name = long_options[option_index].name;
+	        if (name == "solver_type") {
+	            set_solver_type();
+	        } else if (name == "thread_count") {
+	            set_int(thread_count);
+	        } else if (name == "core_size") {
+	            set_int(core_size);
+	        }
+	    }
 	}
-	cout << endl;
-	cout << "metadata: " << metadata << endl;
+
+	void set_int(int &var) {
+		auto value = atoi(optarg);
+		if (value) var = value;
+	}
+
+	void set_solver_type() {
+		string name = optarg;
+		if (name == "coral") {
+			solver_type = CORAL;
+		}
+	}
+
+	SolverType solver_type = CORAL;
+	int thread_count = 1;
+	int core_size = 10;
+};
+
+std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type) {
+	switch (solver_type) {
+	case CMDArgs::CORAL: os << "\"CORAL\"";
+	default: os << "\"ERR\"";
+	}
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const CMDArgs& args) {
+	os << "{";
+	os << "\"solver_type\": " << args.solver_type;
+	os << ", \"thread_count\": " << args.thread_count;
+	os << ", \"core_size\": " << args.core_size;
+	os << "}";
+
+	return os;
+}
+
+class ISolver {
+public:
+	virtual void init() = 0;
+	virtual void solve() = 0;
+	virtual void print_solution() = 0;
+};
+
+class CORALSolver final : public ISolver {
+public:
+	CORALSolver(): res(problem) {}
+
+	void init() override {
+		problem.init();
+	}
+
+	void solve() override {
+		res = coral(problem);
+	}
+
+	void print_solution() override {
+		cout << res.cost << endl;
+		cout << res.n_size[N1] << endl;
+		for (auto id : res.get_list(N1)) {
+			cout << id << " ";
+		}
+		cout << endl;
+	}
+
+private:
+	Problem problem;
+	Mdkp res;
+};
+
+shared_ptr<ISolver> get_solver(const CMDArgs& args) {
+	switch (args.solver_type) {
+	case (CMDArgs::CORAL): return make_shared<CORALSolver>();
+	default: return make_shared<CORALSolver>();
+	}
+}
+
+int main(int argc, char **argv) {
+	CMDArgs args;
+	args.parse_args(argc, argv);
+
+	auto solver = get_solver(args);
+	solver->init();
+	solver->solve();
+	solver->print_solution();
+
+	// Problem problem;
+	// problem.init();
+
+	// metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	// Mdkp res = coral(problem);
+	// metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - metadata.duration_time;
+
+	// cout << res.cost << endl;
+	// cout << res.n_size[N1] << endl;
+	// for (auto id : res.get_list(N1)) {
+	// 	cout << id << " ";
+	// }
+	// cout << endl;
+	// cout << "metadata: " << metadata << endl;
 }
