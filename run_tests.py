@@ -80,11 +80,11 @@ def run_test(file_name, args):
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Test mdkp.')
 	parser.add_argument('-c', '--command', required=True, help='mdkp binary')
-	parser.add_argument('-p', '--path', required=True, help='path to tests directory')
-	parser.add_argument('-f', '--filter', help='regexp filter for test files')
-	parser.add_argument('-s', '--skip_checks', action='store_true', help='skip comparing result with etalon')
-	parser.add_argument('-w', '--write_etalon', action='store_true', help='write answer to etalon')
-	parser.add_argument('-l', '--list', action='store_true', help='show list of tests')
+	parser.add_argument('-p', '--path', required=True, help='path to the test directory')
+	parser.add_argument('-f', '--filter', help='regular expression filter for test files')
+	parser.add_argument('-s', '--skip_checks', action='store_true', help='skip comparing the result with the etalon')
+	parser.add_argument('-w', '--write_etalon', action='store_true', help='write etalon')
+	parser.add_argument('-l', '--list', action='store_true', help='show the list of tests')
 	args = parser.parse_args()
 
 	regex = None
