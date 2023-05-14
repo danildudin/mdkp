@@ -49,33 +49,63 @@ class Problem:
 				return False
 		return True
 
-def run_test(file_name, args):
-	test_in = args.path + "/" + file_name
-	test_res = test_in + "_res"
-	test_etalon = test_in + "_etalon"
-	cmd_str = args.command + " < {0} > {1}".format(test_in, test_res)
+class TestRunner:
+	def __init__(self, args):
+		self.args = args
+		self.exec_time = []
+		self.not_ok_cnt = 0
 
-	print(test_in + "\t", end="")
-	start_time = time.time()
-	subprocess.run(cmd_str, shell=True)
-	print("{:.4f}\t".format(time.time() - start_time), end="")
+	def run_tests(self):
+		regex = None
+		if self.args.filter:
+			regex = re.compile(self.args.filter)
 
-	if args.write_etalon:
-		subprocess.run("cp {0} {1}".format(test_res, test_etalon), shell=True)
-		print()
-	elif not args.skip_checks:
-		problem = Problem(test_in)
-		res_etalon = Solution(test_etalon, problem)
-		res = Solution(test_res, problem)
+		for file in os.listdir(self.args.path):
+			if regex == None or regex.match(file):
+				if self.args.list:
+					print(file)
+				else:
+					self.run_test(file)
 
-		if res_etalon.z == res.z and problem.is_feasible(res):
-			print("ok")
+	def run_test(self, file_name):
+		test_in = self.args.path + "/" + file_name
+		test_res = test_in + "_res"
+		test_etalon = test_in + "_etalon"
+		cmd_str = self.args.command + " < {0} > {1}".format(test_in, test_res)
+
+		print(test_in + "\t", end="")
+
+		start_time = time.time()
+		subprocess.run(cmd_str, shell=True)
+		ts = time.time() - start_time
+		self.exec_time.append(ts)
+
+		print("{:.4f}\t".format(ts), end="")
+
+		if self.args.write_etalon:
+			subprocess.run("cp {0} {1}".format(test_res, test_etalon), shell=True)
+			print()
+		elif not self.args.skip_checks:
+			problem = Problem(test_in)
+			res_etalon = Solution(test_etalon, problem)
+			res = Solution(test_res, problem)
+
+			if res_etalon.z == res.z and problem.is_feasible(res):
+				print("ok")
+			else:
+				print("not ok")
+				print("expected: ", res_etalon)
+				print("got: ", res)
+				self.not_ok_cnt += 1
 		else:
-			print("not ok")
-			print("expected: ", res_etalon)
-			print("got: ", res)
-	else:
-		print()
+			print()
+
+	def print_stat(self):
+		print("tests cnt: {0}".format(len(self.exec_time)))
+		print("ok: {0}".format(len(self.exec_time) - self.not_ok_cnt))
+		print("not ok: {0}".format(self.not_ok_cnt))
+		print("average time (ms): {:04f}".format(sum(self.exec_time) / len(self.exec_time)))
+		print("median time (ms): {:04f}".format(sorted(self.exec_time)[len(self.exec_time) // 2]))
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Test mdkp.')
@@ -87,13 +117,6 @@ if __name__ == "__main__":
 	parser.add_argument('-l', '--list', action='store_true', help='show the list of tests')
 	args = parser.parse_args()
 
-	regex = None
-	if args.filter:
-		regex = re.compile(args.filter)
-
-	for file in os.listdir(args.path):
-		if regex == None or regex.match(file):
-			if args.list:
-				print(file)
-			else:
-				run_test(file, args)
+	runner = TestRunner(args)
+	runner.run_tests()
+	runner.print_stat()
