@@ -16,5 +16,7 @@ public:
 	int core_size = 10;
 };
 
+extern CMDArgs cmdargs;
+
 std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type);
 std::ostream& operator<<(std::ostream& os, const CMDArgs& args);

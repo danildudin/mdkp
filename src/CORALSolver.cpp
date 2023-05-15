@@ -9,6 +9,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <glpk.h>
 
+#include "CMDArgs.h"
 #include "CORALSolver.h"
 #include "CoreData.h"
 #include "utils.h"
@@ -205,7 +206,7 @@ namespace {
 			lp_res.items.pop_back();
 		}
 
-		while (mdkp.n_size[Mdkp::CORE] > CORE_SIZE) {
+		while (mdkp.n_size[Mdkp::CORE] > cmdargs.core_size) {
 			const auto& item = lp_res.items.back();
 
 			auto tmp = mdkp;
@@ -225,7 +226,7 @@ namespace {
 				}	
 			}
 
-			if (tmp.n_size[Mdkp::CORE] > CORE_SIZE) {
+			if (tmp.n_size[Mdkp::CORE] > cmdargs.core_size) {
 				tmp = variable_fixing(std::move(tmp), res, depth + "\t");	
 			}
 			tmp = solve_restricted_core_problem(std::move(tmp), res.cost);
@@ -266,7 +267,7 @@ namespace {
 			}
 		}
 
-		boost::asio::thread_pool pool(31);
+		boost::asio::thread_pool pool(cmdargs.thread_count);
 		boost::asio::post(pool, std::bind(solve_optimal, mdkp, &res));
 		for (int j = problem.m; j < problem.n; j++) {
 			const auto& item = lp_res.items[j];

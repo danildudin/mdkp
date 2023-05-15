@@ -10,6 +10,8 @@ namespace {
     }
 }
 
+CMDArgs cmdargs;
+
 void CMDArgs::set_solver_type() {
 	std::string name = optarg;
 	if (name == "coral") {
