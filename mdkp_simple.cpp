@@ -8,9 +8,9 @@
 using namespace std;
 
 void init(vector<vector<int>> &a, vector<int> &b, vector<int> &c) {
-	int n, m;
+	int n, m, etalon;
 
-	cin >> n >> m;
+	cin >> n >> m >> etalon;
 	a.resize(m, vector<int>(n));
 	b.resize(m);
 	c.resize(n);
@@ -22,6 +22,8 @@ void init(vector<vector<int>> &a, vector<int> &b, vector<int> &c) {
 		for (int j = 0; j < n; j++) {
 			cin >> a[i][j];
 		}
+	}
+	for (int i = 0; i < m; i++) {
 		cin >> b[i];
 	}
 }

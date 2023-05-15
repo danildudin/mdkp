@@ -8,11 +8,11 @@ include_directories(include/ /usr/local/boost_1_82_0)
 
 add_executable(
 	mdkp
+	src/BFSolver.cpp
 	src/CMDArgs.cpp
 	src/CORALSolver.cpp
 	src/CoreData.cpp
 	src/DPSolver.cpp
-	src/LPSolution.cpp
 	src/LPSolution.cpp
 	src/main.cpp
 	src/Mdkp.cpp

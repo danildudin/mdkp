@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 
+#include "BFSolver.h"
 #include "CMDArgs.h"
 #include "CORALSolver.h"
 #include "DPSolver.h"
@@ -11,6 +12,7 @@ std::shared_ptr<ISolver> get_solver(const CMDArgs& args) {
 	switch (args.solver_type) {
 	case (CMDArgs::CORAL): return std::make_shared<CORALSolver>();
 	case (CMDArgs::DP): return std::make_shared<DPSolver>();
+	case (CMDArgs::BF): return std::make_shared<BFSolver>();
 	default: return std::make_shared<CORALSolver>();
 	}
 }

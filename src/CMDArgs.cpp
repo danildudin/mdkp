@@ -16,6 +16,8 @@ void CMDArgs::set_solver_type() {
 		solver_type = CORAL;
 	} else if (name == "dp") {
 		solver_type = DP;
+	} else if (name == "bf") {
+		solver_type = BF;
 	}
 }
 
