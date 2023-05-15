@@ -9,9 +9,8 @@
 #include <atomic>
 #include <chrono>
 #include <mutex>
-#include <thread>
-#include <getopt.h>
-#include <memory>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
 using namespace std;
 
 const int CORE_SIZE = 10;
@@ -632,16 +631,9 @@ Mdkp coral(Problem problem) {
 		}
 	}
 
-	vector<thread> threads;
-	threads.emplace_back(solve_optimal, mdkp, &res);
+	boost::asio::thread_pool tp(8);
+	boost::asio::post(tp, std::bind(solve_optimal, mdkp, &res));
 	for (int j = problem.m; j < problem.n; j++) {
-		if (threads.size() >= 31) {
-			for (auto &thread : threads) {
-				thread.join();
-			}
-			threads.clear();
-		}
-
 		const auto& item = lp_res.items[j];
 		if (abs(item.rc) >= ub - res.cost) break;
 
@@ -651,142 +643,140 @@ Mdkp coral(Problem problem) {
 			mdkp.set_x(item.id, N0);
 		}
 		if (mdkp.is_feasible()) {
-			threads.emplace_back(solve_optimal, mdkp, &res);
+			boost::asio::post(tp, std::bind(solve_optimal, mdkp, &res));
 		}
 		mdkp.set_x(item.id, CORE);
 	}
-	for (auto &thread : threads) {
-		thread.join();
-	}
+	tp.join();
 
 	return res;
 }
 
-struct CMDArgs {
-	enum SolverType {CORAL, LAST = CORAL};
+// struct CMDArgs {
+// 	enum SolverType {CORAL, LAST = CORAL};
 
-	void parse_args(int argc, char **argv) {
-		struct option long_options[] = {
-            {"solver_type", required_argument, 0, 0},
-            {"thread_count", required_argument, 0, 0},
-            {"core_size", required_argument, 0, 0},
-            {0, 0, 0, 0}
-        };
+// 	void parse_args(int argc, char **argv) {
+// 		struct option long_options[] = {
+//             {"solver_type", required_argument, 0, 0},
+//             {"thread_count", required_argument, 0, 0},
+//             {"core_size", required_argument, 0, 0},
+//             {0, 0, 0, 0}
+//         };
 
-		int c = 0, option_index = 0;
-	    while (true) {
-	        c = getopt_long(argc, argv, "", long_options, &option_index);
-	        if (c == -1) break;
-	        if (c != 0) continue;
+// 		int c = 0, option_index = 0;
+// 	    while (true) {
+// 	        c = getopt_long(argc, argv, "", long_options, &option_index);
+// 	        if (c == -1) break;
+// 	        if (c != 0) continue;
 
-	        string name = long_options[option_index].name;
-	        if (name == "solver_type") {
-	            set_solver_type();
-	        } else if (name == "thread_count") {
-	            set_int(thread_count);
-	        } else if (name == "core_size") {
-	            set_int(core_size);
-	        }
-	    }
-	}
+// 	        string name = long_options[option_index].name;
+// 	        if (name == "solver_type") {
+// 	            set_solver_type();
+// 	        } else if (name == "thread_count") {
+// 	            set_int(thread_count);
+// 	        } else if (name == "core_size") {
+// 	            set_int(core_size);
+// 	        }
+// 	    }
+// 	}
 
-	void set_int(int &var) {
-		auto value = atoi(optarg);
-		if (value) var = value;
-	}
+// 	void set_int(int &var) {
+// 		auto value = atoi(optarg);
+// 		if (value) var = value;
+// 	}
 
-	void set_solver_type() {
-		string name = optarg;
-		if (name == "coral") {
-			solver_type = CORAL;
-		}
-	}
+// 	void set_solver_type() {
+// 		string name = optarg;
+// 		if (name == "coral") {
+// 			solver_type = CORAL;
+// 		}
+// 	}
 
-	SolverType solver_type = CORAL;
-	int thread_count = 1;
-	int core_size = 10;
-};
+// 	SolverType solver_type = CORAL;
+// 	int thread_count = 1;
+// 	int core_size = 10;
+// };
 
-std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type) {
-	switch (solver_type) {
-	case CMDArgs::CORAL: os << "\"CORAL\"";
-	default: os << "\"ERR\"";
-	}
+// std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type) {
+// 	switch (solver_type) {
+// 	case CMDArgs::CORAL: os << "\"CORAL\"";
+// 	default: os << "\"ERR\"";
+// 	}
 
-	return os;
-}
+// 	return os;
+// }
 
-std::ostream& operator<<(std::ostream& os, const CMDArgs& args) {
-	os << "{";
-	os << "\"solver_type\": " << args.solver_type;
-	os << ", \"thread_count\": " << args.thread_count;
-	os << ", \"core_size\": " << args.core_size;
-	os << "}";
+// std::ostream& operator<<(std::ostream& os, const CMDArgs& args) {
+// 	os << "{";
+// 	os << "\"solver_type\": " << args.solver_type;
+// 	os << ", \"thread_count\": " << args.thread_count;
+// 	os << ", \"core_size\": " << args.core_size;
+// 	os << "}";
 
-	return os;
-}
+// 	return os;
+// }
 
-class ISolver {
-public:
-	virtual void init() = 0;
-	virtual void solve() = 0;
-	virtual void print_solution() = 0;
-};
+// class ISolver {
+// public:
+// 	virtual void init() = 0;
+// 	virtual void solve() = 0;
+// 	virtual void print_solution() = 0;
+// };
 
-class CORALSolver final : public ISolver {
-public:
-	CORALSolver(): res(problem) {}
+// class CORALSolver final : public ISolver {
+// public:
+// 	CORALSolver(): res(problem) {}
 
-	void init() override {
-		problem.init();
-	}
+// 	void init() override {
+// 		problem.init();
+// 	}
 
-	void solve() override {
-		res = coral(problem);
-	}
+// 	void solve() override {
+// 		res = coral(problem);
+// 	}
 
-	void print_solution() override {
-		cout << res.cost << endl;
-		cout << res.n_size[N1] << endl;
-		for (auto id : res.get_list(N1)) {
-			cout << id << " ";
-		}
-		cout << endl;
-	}
+// 	void print_solution() override {
+// 		cout << res.cost << endl;
+// 		cout << res.n_size[N1] << endl;
+// 		for (auto id : res.get_list(N1)) {
+// 			cout << id << " ";
+// 		}
+// 		cout << endl;
+// 	}
 
-private:
-	Problem problem;
-	Mdkp res;
-};
+// private:
+// 	Problem problem;
+// 	Mdkp res;
+// };
 
-shared_ptr<ISolver> get_solver(const CMDArgs& args) {
-	switch (args.solver_type) {
-	case (CMDArgs::CORAL): return make_shared<CORALSolver>();
-	default: return make_shared<CORALSolver>();
-	}
-}
+// shared_ptr<ISolver> get_solver(const CMDArgs& args) {
+// 	switch (args.solver_type) {
+// 	case (CMDArgs::CORAL): return make_shared<CORALSolver>();
+// 	default: return make_shared<CORALSolver>();
+// 	}
+// }
 
 int main(int argc, char **argv) {
-	CMDArgs args;
-	args.parse_args(argc, argv);
+	// CMDArgs args;
+	// args.parse_args(argc, argv);
 
-	auto solver = get_solver(args);
-	solver->init();
-	solver->solve();
-	solver->print_solution();
+	// auto solver = get_solver(args);
+	// solver->init();
+	// solver->solve();
+	// solver->print_solution();
 
-	// Problem problem;
-	// problem.init();
+	Problem problem;
+	problem.init();
 
-	// metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	// Mdkp res = coral(problem);
-	// metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - metadata.duration_time;
+	metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	Mdkp res = coral(problem);
+	metadata.duration_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - metadata.duration_time;
 
-	// cout << res.cost << endl;
-	// cout << res.n_size[N1] << endl;
-	// for (auto id : res.get_list(N1)) {
-	// 	cout << id << " ";
-	// }
-	// cout << endl;
-	// cout << "metadata: " << metadata << endl;
+	cout << res.cost << endl;
+	cout << res.n_size[N1] << endl;
+	for (auto id : res.get_list(N1)) {
+		cout << id << " ";
+	}
+	cout << endl;
+	cout << "metadata: " << metadata << endl;
 }
