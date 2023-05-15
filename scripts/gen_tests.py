@@ -25,8 +25,9 @@ def gen_test(id, args):
 		for i in range(0, len(a)):
 			for val in a[i]:
 				f.write(str(val) + " ")
-			f.write(str(b[i]))	
 			f.write("\n")
+		for i in range(0, m):
+			f.write(str(b[i]) + " ")
 
 	cmd_str = args.command + "< {0} > {1}".format(test_in, test_etalon)
 	subprocess.run(cmd_str, shell=True)
