@@ -77,7 +77,7 @@ void DPSolver::print_solution() {
 	const DPSolver::DPItem* cur_val = NULL;
 	for (int j = 0; j < n; j++) {
 		for (auto const& [key, val] : dp[j]) {
-			if (*cur_val < val) {
+			if (cur_val == NULL || *cur_val < val) {
 				cur_val = &val;
 			}
 		}
