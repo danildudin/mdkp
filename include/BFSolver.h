@@ -25,9 +25,6 @@ public:
 	}
 
 private:
-	void search_tree(Mdkp& cur, int id);
-
-private:
 	Problem problem;
 	Mdkp res;
 };
