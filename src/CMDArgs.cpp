@@ -14,6 +14,8 @@ void CMDArgs::set_solver_type() {
 	std::string name = optarg;
 	if (name == "coral") {
 		solver_type = CORAL;
+	} else if (name == "dp") {
+		solver_type = DP;
 	}
 }
 

@@ -3,12 +3,14 @@
 
 #include "CMDArgs.h"
 #include "CORALSolver.h"
+#include "DPSolver.h"
 #include "ISolver.h"
 #include "utils.h"
 
 std::shared_ptr<ISolver> get_solver(const CMDArgs& args) {
 	switch (args.solver_type) {
 	case (CMDArgs::CORAL): return std::make_shared<CORALSolver>();
+	case (CMDArgs::DP): return std::make_shared<DPSolver>();
 	default: return std::make_shared<CORALSolver>();
 	}
 }
