@@ -42,21 +42,21 @@ void CMDArgs::parse_args(int argc, char **argv) {
     }
 }
 
-// std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type) {
-// 	switch (solver_type) {
-// 	case CMDArgs::CORAL: os << "\"CORAL\"";
-// 	default: os << "\"ERR\"";
-// 	}
+std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type) {
+	switch (solver_type) {
+	case CMDArgs::CORAL: os << "\"CORAL\"";
+	default: os << "\"ERR\"";
+	}
 
-// 	return os;
-// }
+	return os;
+}
 
-// std::ostream& operator<<(std::ostream& os, const CMDArgs& args) {
-// 	os << "{";
-// 	os << "\"solver_type\": " << args.solver_type;
-// 	os << ", \"thread_count\": " << args.thread_count;
-// 	os << ", \"core_size\": " << args.core_size;
-// 	os << "}";
+std::ostream& operator<<(std::ostream& os, const CMDArgs& args) {
+	os << "{";
+	os << "\"solver_type\": " << args.solver_type;
+	os << ", \"thread_count\": " << args.thread_count;
+	os << ", \"core_size\": " << args.core_size;
+	os << "}";
 
-// 	return os;
-// }
+	return os;
+}

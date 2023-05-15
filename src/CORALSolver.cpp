@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
-#include <glpk.h>
 #include <mutex>
 #include <thread>
 #include <vector>
+
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <glpk.h>
 
 #include "CORALSolver.h"
 #include "CoreData.h"
@@ -263,16 +266,9 @@ namespace {
 			}
 		}
 
-		std::vector<std::thread> threads;
-		threads.emplace_back(solve_optimal, mdkp, &res);
+		boost::asio::thread_pool pool(31);
+		boost::asio::post(pool, std::bind(solve_optimal, mdkp, &res));
 		for (int j = problem.m; j < problem.n; j++) {
-			if (threads.size() >= 31) {
-				for (auto &thread : threads) {
-					thread.join();
-				}
-				threads.clear();
-			}
-
 			const auto& item = lp_res.items[j];
 			if (abs(item.rc) >= ub - res.cost) break;
 
@@ -282,13 +278,11 @@ namespace {
 				mdkp.set_x(item.id, Mdkp::N0);
 			}
 			if (mdkp.is_feasible()) {
-				threads.emplace_back(solve_optimal, mdkp, &res);
+				boost::asio::post(pool, std::bind(solve_optimal, mdkp, &res));
 			}
 			mdkp.set_x(item.id, Mdkp::CORE);
 		}
-		for (auto &thread : threads) {
-			thread.join();
-		}
+		pool.join();
 
 		return res;
 	}

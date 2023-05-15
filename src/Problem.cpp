@@ -23,13 +23,13 @@ void Problem::init() {
 	}
 }
 
-// std::ostream& operator<<(std::ostream& os, const Problem& p) {
-//     os << "{";
-//     os << "\"n\": " << p.n << ", \"m\": " << p.m;
-//     os << ", \"c\": " << p.c;
-//     os << ", \"b\": " << p.b;
-//     os << ", \"a_sum\": " << p.a_sum;
-//     os << ", \"a\": " << p.a;
-//     os << "}";
-//     return os;
-// }
+std::ostream& operator<<(std::ostream& os, const Problem& p) {
+    os << "{";
+    os << "\"n\": " << p.n << ", \"m\": " << p.m;
+    os << ", \"c\": " << p.c;
+    os << ", \"b\": " << p.b;
+    os << ", \"a_sum\": " << p.a_sum;
+    os << ", \"a\": " << p.a;
+    os << "}";
+    return os;
+}

@@ -16,4 +16,4 @@ public:
 	LPSolution lp_res;
 };
 
-// std::ostream& operator<<(std::ostream& os, const CoreData& data);
+std::ostream& operator<<(std::ostream& os, const CoreData& data);

@@ -13,6 +13,6 @@ struct LPSolution {
 	std::vector<Item*> items_map;
 };
 
-// std::ostream& operator<<(std::ostream& os, const LPSolution::Item* item);
-// std::ostream& operator<<(std::ostream& os, const LPSolution::Item& item);
-// std::ostream& operator<<(std::ostream& os, const LPSolution& res);
+std::ostream& operator<<(std::ostream& os, const LPSolution::Item* item);
+std::ostream& operator<<(std::ostream& os, const LPSolution::Item& item);
+std::ostream& operator<<(std::ostream& os, const LPSolution& res);

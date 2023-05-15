@@ -30,5 +30,5 @@ public:
 	std::vector<int> n_size, b, weights;
 };
 
-// std::ostream& operator<<(std::ostream& os, const Mdkp::XType xtype);
-// std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp);
+std::ostream& operator<<(std::ostream& os, const Mdkp::XType xtype);
+std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp);

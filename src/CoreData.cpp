@@ -16,14 +16,14 @@ CoreData::CoreData(const Mdkp &mdkp) {
 	}
 }
 
-// std::ostream& operator<<(std::ostream& os, const CoreData& data) {
-//     os << "{";
-//     os << "\"k\": " << data.k;
-//     os << ", \"start_cost\": " << data.start_cost;
-//     os << ", \"sorted\": " << data.sorted;
-//     os << ", \"w_sum_sorted\": " << data.w_sum_sorted;
-//     os << ", \"lp_res\": " << data.lp_res;
-//     os << "}";
+std::ostream& operator<<(std::ostream& os, const CoreData& data) {
+    os << "{";
+    os << "\"k\": " << data.k;
+    os << ", \"start_cost\": " << data.start_cost;
+    os << ", \"sorted\": " << data.sorted;
+    os << ", \"w_sum_sorted\": " << data.w_sum_sorted;
+    os << ", \"lp_res\": " << data.lp_res;
+    os << "}";
 
-//     return os;
-// }
+    return os;
+}

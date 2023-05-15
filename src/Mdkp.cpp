@@ -154,29 +154,29 @@ LPSolution Mdkp::lp_relaxation() const {
 	return res;
 }
 
-// std::ostream& operator<<(std::ostream& os, const Mdkp::XType xtype) {
-// 	switch (xtype) {
-// 	case Mdkp::N1: os << "\"Mdkp::N1\"";
-// 	case Mdkp::N0: os << "\"Mdkp::N0\"";
-// 	case Mdkp::CORE: os << "\"Mdkp::CORE\"";
-// 	default: os << "\"ERR\"";
-// 	}
+std::ostream& operator<<(std::ostream& os, const Mdkp::XType xtype) {
+	switch (xtype) {
+	case Mdkp::N1: os << "\"Mdkp::N1\"";
+	case Mdkp::N0: os << "\"Mdkp::N0\"";
+	case Mdkp::CORE: os << "\"Mdkp::CORE\"";
+	default: os << "\"ERR\"";
+	}
 
-// 	return os;
-// }
+	return os;
+}
 
-// std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp) {
-//     os << "{";
-//     os << "\"is_feasible()\": " << mdkp.is_feasible();
-//     os << ", \"cost\": " << mdkp.cost;
-//     os << ", \"n_size\": " << mdkp.n_size;
-//     os << ", \"x\": " << mdkp.x;
-//     os << ", \"w_sum\": " << mdkp.w_sum;
-//     os << ", \"b_sum\": " << mdkp.b_sum;
-//     os << ", \"weights\": " << mdkp.weights;
-//     os << ", \"b\": " << mdkp.b;
-//     os << ", \"problem\": " << mdkp.problem;
-//     os << "}";
+std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp) {
+    os << "{";
+    os << "\"is_feasible()\": " << mdkp.is_feasible();
+    os << ", \"cost\": " << mdkp.cost;
+    os << ", \"n_size\": " << mdkp.n_size;
+    os << ", \"x\": " << mdkp.x;
+    os << ", \"w_sum\": " << mdkp.w_sum;
+    os << ", \"b_sum\": " << mdkp.b_sum;
+    os << ", \"weights\": " << mdkp.weights;
+    os << ", \"b\": " << mdkp.b;
+    os << ", \"problem\": " << mdkp.problem;
+    os << "}";
 
-//     return os;
-// }
+    return os;
+}

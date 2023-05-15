@@ -12,4 +12,4 @@ public:
 	std::vector<int> c, b, a_sum;
 };
 
-// std::ostream& operator<<(std::ostream& os, const Problem& p);
+std::ostream& operator<<(std::ostream& os, const Problem& p);

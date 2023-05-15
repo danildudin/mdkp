@@ -16,5 +16,5 @@ public:
 	int core_size = 10;
 };
 
-// std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type);
-// std::ostream& operator<<(std::ostream& os, const CMDArgs& args);
+std::ostream& operator<<(std::ostream& os, const CMDArgs::SolverType solver_type);
+std::ostream& operator<<(std::ostream& os, const CMDArgs& args);
