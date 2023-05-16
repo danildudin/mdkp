@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <atomic>
+#include <mutex>
 
 #include "Problem.h"
 #include "LPSolution.h"
@@ -23,6 +24,8 @@ public:
 	LPSolution lp_relaxation() const;
 
 public:
+	std::mutex mu;
+
 	Problem& problem;
 	std::atomic_int cost;
 	int w_sum, b_sum;
@@ -32,3 +35,5 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Mdkp::XType xtype);
 std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp);
+
+bool compare_and_set(Mdkp& res, const Mdkp& other);

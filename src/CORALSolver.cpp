@@ -177,7 +177,6 @@ namespace {
 		k_min = find_k(mdkp, lb, true);
 		k_max = find_k(mdkp, lb, false);
 
-
 		// if (cmdargs.thread_count > 1 && solve_optimal_cnt.load() < 24) {
 		// 	std::packaged_task<CoreData(const Mdkp*)> core_data_task([](const Mdkp* mdkp) { return CoreData(*mdkp); });
 		// 	std::future<CoreData> core_data_future = core_data_task.get_future();
@@ -229,16 +228,6 @@ namespace {
 
 	bool double_equal(double a, double b) {
 		return abs(a - b) < EPS;
-	}
-
-	std::mutex mu;
-	bool compare_and_set(Mdkp& res, const Mdkp& other) {
-		if (res.cost > other.cost) return false;
-		std::scoped_lock lock(mu);
-
-		if (res.cost >= other.cost) return false;
-		res = other;
-		return true;
 	}
 
 	Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, CORALSolver::Metadata &metadata) {

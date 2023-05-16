@@ -180,3 +180,12 @@ std::ostream& operator<<(std::ostream& os, const Mdkp& mdkp) {
 
     return os;
 }
+
+bool compare_and_set(Mdkp& res, const Mdkp& other) {
+	if (res.cost > other.cost) return false;
+	std::scoped_lock lock(res.mu);
+
+	if (res.cost >= other.cost) return false;
+	res = other;
+	return true;
+}

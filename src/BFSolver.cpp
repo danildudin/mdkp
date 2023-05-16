@@ -7,14 +7,6 @@
 #include "CMDArgs.h"
 
 namespace {
-	std::mutex mu;
-	void compare_and_set(Mdkp& res, const Mdkp& other) {
-		if (res.cost >= other.cost) return;
-
-		std::scoped_lock lock(mu);
-		if (res.cost < other.cost) res = other;
-	}
-
 	void search_tree(Mdkp &cur, Mdkp *res, int id) {
 		if (id == cur.problem.c.size()) {
 			if (cur.is_feasible()) compare_and_set(*res, cur);
