@@ -3,7 +3,7 @@
 
 class CMDArgs {
 public:
-	enum SolverType {CORAL, DP, BF, LAST = BF};
+	enum SolverType {CORAL, DP, BF, BB, LAST = BB};
 
 	void parse_args(int argc, char **argv);
 

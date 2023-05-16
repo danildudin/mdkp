@@ -20,6 +20,8 @@ void CMDArgs::set_solver_type() {
 		solver_type = DP;
 	} else if (name == "bf") {
 		solver_type = BF;
+	} else if (name == "bb") {
+		solver_type = BB;
 	}
 }
 

@@ -13,10 +13,11 @@ namespace {
 			return;
 		}
 
-		search_tree(cur, res, id + 1);
 		cur.set_x(id, Mdkp::N1);
 		search_tree(cur, res, id + 1);
 		cur.set_x(id, Mdkp::N0);
+		search_tree(cur, res, id + 1);
+		cur.set_x(id, Mdkp::CORE);
 	}
 
 	void search_tree_parallell(Mdkp &cur, Mdkp &res, int id, boost::asio::thread_pool &pool, int stop) {
@@ -26,17 +27,19 @@ namespace {
 		}
 
 		if (id + 1 < stop) {
-			search_tree_parallell(cur, res, id + 1, pool, stop);
 			cur.set_x(id, Mdkp::N1);
 			search_tree_parallell(cur, res, id + 1, pool, stop);
 			cur.set_x(id, Mdkp::N0);
+			search_tree_parallell(cur, res, id + 1, pool, stop);
+			cur.set_x(id, Mdkp::CORE);
 			return;
 		}
 
-		boost::asio::post(pool, std::bind(search_tree, cur, &res, id + 1));
 		cur.set_x(id, Mdkp::N1);
 		boost::asio::post(pool, std::bind(search_tree, cur, &res, id + 1));
 		cur.set_x(id, Mdkp::N0);
+		boost::asio::post(pool, std::bind(search_tree, cur, &res, id + 1));
+		cur.set_x(id, Mdkp::CORE);
 	}
 }
 
