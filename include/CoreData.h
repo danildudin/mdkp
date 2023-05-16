@@ -7,10 +7,12 @@
 
 class CoreData {
 public:
+	CoreData() {};
 	CoreData(const Mdkp &mdkp);
 
 public:
-	int k, start_cost;
+	int k = 0;
+	int start_cost = 0;
 	std::vector<int> sorted, w_sum_sorted;
 	std::vector<std::vector<int>> w_sorted;
 	LPSolution lp_res;
