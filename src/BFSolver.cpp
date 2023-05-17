@@ -50,7 +50,7 @@ void BFSolver::solve() {
 		return;
 	}
 
-	int stop = std::ceil(std::log2(cmdargs.thread_count));
+	int stop = std::ceil(std::log2(cmdargs.thread_count)) + 5;
 	boost::asio::thread_pool pool(cmdargs.thread_count);
 	search_tree_parallell(cur, res, 0, pool, stop);
 	pool.join();
