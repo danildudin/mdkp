@@ -335,6 +335,12 @@ std::ostream& operator<<(std::ostream& os, const CORALSolver::Metadata& md) {
 	os << ", \"variable_fixing_ts\": " << md.variable_fixing_ts;
 	os << ", \"variable_fixing_ratio\": " << double(md.variable_fixing_ts) / md.solve_optimal_ts;
 
+	os << ", \"solve_restricted_core_problem_coredata_ts\": " << md.solve_restricted_core_problem_coredata_ts;
+	os << ", \"solve_restricted_core_problem_coredata_ratio\": " << double(md.solve_restricted_core_problem_coredata_ts) / md.solve_optimal_ts;
+
+	os << ", \"solve_restricted_core_problem_find_k_ts\": " << md.solve_restricted_core_problem_find_k_ts;
+	os << ", \"solve_restricted_core_problem_find_k_ratio\": " << double(md.solve_restricted_core_problem_find_k_ts) / md.solve_optimal_ts;
+
 	os << ", \"solve_restricted_core_problem_cnt\": " << md.solve_restricted_core_problem_cnt;
 	os << ", \"solve_restricted_core_problem_ts\": " << md.solve_restricted_core_problem_ts;
 	os << ", \"solve_restricted_core_problem_ratio\": " << double(md.solve_restricted_core_problem_ts) / md.solve_optimal_ts;
