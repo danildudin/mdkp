@@ -1,0 +1,9 @@
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 16' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/16	26.0285	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 14' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/14	27.0299	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 12' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/12	28.6812	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 10' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/10	31.4497	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 8' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/8	37.5780	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 6' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/6	44.0066	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 4' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/4	63.8136	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 2' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/2	111.2328	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 1' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/bf/1	201.7922	

@@ -1,0 +1,4 @@
+1241
+15
+8 10 11 12 19 22 29 30 37 42 44 50 51 57 61 
+[{"duration_time": 189, "solve_optimal": 1, "solve_restricted_core_problem": 1271, "solve_restricted_core_problem_time_sum": 159, "solve_restricted_core_problem_lp_relaxation_time_sum": 113, "variable_fixing": 504, "lp_relaxation": 0, "k_diff_sum": 715}]

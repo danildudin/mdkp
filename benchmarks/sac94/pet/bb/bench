@@ -1,0 +1,9 @@
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 16' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/16	4.7199	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 14' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/14	4.9154	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 12' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/12	4.4896	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 10' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/10	4.4913	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 8' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/8	6.3031	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 6' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/6	6.4014	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 4' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/4	11.6582	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 2' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/2	15.9282	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 1' -p 'All-MKP-Instances/sac94/pet' -f '.*\.dat$' > benchmarks/sac94/pet/bb/1	23.0402	

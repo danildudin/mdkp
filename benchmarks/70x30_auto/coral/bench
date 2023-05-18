@@ -1,0 +1,9 @@
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 16' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/16	0.2760	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 14' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/14	0.2730	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 12' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/12	0.2744	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 10' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/10	0.2753	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 8' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/8	0.2779	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 6' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/6	0.2841	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 4' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/4	0.2961	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 2' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/2	0.3564	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 1' -p 'benchmarks/70x30_auto' -f '\d+$' > benchmarks/70x30_auto/coral/1	0.4976	

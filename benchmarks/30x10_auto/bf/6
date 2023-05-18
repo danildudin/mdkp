@@ -1,0 +1,8 @@
+benchmarks/30x10_auto/0000	6.5421	ok
+benchmarks/30x10_auto/0001	6.6361	ok
+benchmarks/30x10_auto/0002	6.4237	ok
+tests cnt: 3
+ok: 3
+not ok: 0
+average time (ms): 6.533971
+median time (ms): 6.542057

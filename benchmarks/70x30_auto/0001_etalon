@@ -1,0 +1,4 @@
+932
+13
+0 3 4 13 14 18 21 31 35 40 44 52 56 
+[{"duration_time": 71, "solve_optimal": 1, "solve_restricted_core_problem": 560, "solve_restricted_core_problem_time_sum": 61, "solve_restricted_core_problem_lp_relaxation_time_sum": 48, "variable_fixing": 186, "lp_relaxation": 0, "k_diff_sum": 286}]

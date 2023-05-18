@@ -1,0 +1,10 @@
+benchmarks/70x30_auto/0000	4.5199	ok
+benchmarks/70x30_auto/0001	5.1430	ok
+benchmarks/70x30_auto/0002	6.0872	ok
+benchmarks/70x30_auto/0003	11.4126	ok
+benchmarks/70x30_auto/0004	16.8121	ok
+tests cnt: 5
+ok: 5
+not ok: 0
+average time (ms): 8.794959
+median time (ms): 6.087242

@@ -1,0 +1,7 @@
+All-MKP-Instances/sac94/hp/hp1.dat	0.0443	ok
+All-MKP-Instances/sac94/hp/hp2.dat	0.5569	ok
+tests cnt: 2
+ok: 2
+not ok: 0
+average time (ms): 0.300569
+median time (ms): 0.556874

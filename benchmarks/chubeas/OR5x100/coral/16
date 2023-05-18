@@ -1,0 +1,35 @@
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_1.dat	0.2679	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_10.dat	0.0925	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_2.dat	0.1033	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_3.dat	0.1526	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_4.dat	0.6821	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_5.dat	0.1606	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_6.dat	0.0778	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_7.dat	0.0377	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_8.dat	0.1209	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.25_9.dat	0.0598	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_1.dat	0.0279	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_10.dat	0.1370	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_2.dat	0.0458	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_3.dat	0.8395	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_4.dat	0.1679	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_5.dat	0.0994	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_6.dat	0.0462	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_7.dat	0.0321	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_8.dat	0.3141	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.50_9.dat	0.0425	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_1.dat	0.0275	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_10.dat	0.1889	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_2.dat	0.0921	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_3.dat	0.1021	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_4.dat	0.1594	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_5.dat	0.0524	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_6.dat	0.1232	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_7.dat	0.0493	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_8.dat	0.0398	ok
+All-MKP-Instances/chubeas/OR5x100/OR5x100-0.75_9.dat	0.0365	ok
+tests cnt: 30
+ok: 30
+not ok: 0
+average time (ms): 0.145955
+median time (ms): 0.099399

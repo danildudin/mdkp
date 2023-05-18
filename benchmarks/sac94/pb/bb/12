@@ -1,0 +1,11 @@
+All-MKP-Instances/sac94/pb/pb1.dat	0.0231	ok
+All-MKP-Instances/sac94/pb/pb2.dat	0.4139	ok
+All-MKP-Instances/sac94/pb/pb4.dat	0.0059	ok
+All-MKP-Instances/sac94/pb/pb5.dat	0.0039	ok
+All-MKP-Instances/sac94/pb/pb6.dat	0.3264	ok
+All-MKP-Instances/sac94/pb/pb7.dat	0.9647	ok
+tests cnt: 6
+ok: 6
+not ok: 0
+average time (ms): 0.289648
+median time (ms): 0.326410

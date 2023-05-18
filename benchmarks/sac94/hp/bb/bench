@@ -1,0 +1,9 @@
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 16' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/16	0.5838	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 14' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/14	0.5885	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 12' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/12	0.5906	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 10' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/10	0.6310	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 8' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/8	0.9463	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 6' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/6	0.9539	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 4' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/4	1.3294	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 2' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/2	2.0922	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type bb --thread_count 1' -p 'All-MKP-Instances/sac94/hp' -f '.*\.dat$' > benchmarks/sac94/hp/bb/1	3.8336	

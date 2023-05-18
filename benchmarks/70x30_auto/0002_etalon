@@ -1,0 +1,4 @@
+1117
+14
+3 8 9 14 20 27 41 47 51 53 61 62 63 64 
+[{"duration_time": 60, "solve_optimal": 1, "solve_restricted_core_problem": 553, "solve_restricted_core_problem_time_sum": 55, "solve_restricted_core_problem_lp_relaxation_time_sum": 36, "variable_fixing": 152, "lp_relaxation": 0, "k_diff_sum": 276}]

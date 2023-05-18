@@ -1,0 +1,11 @@
+All-MKP-Instances/sac94/pet/pet2.dat	0.0036	ok
+All-MKP-Instances/sac94/pet/pet3.dat	0.0028	ok
+All-MKP-Instances/sac94/pet/pet4.dat	0.0028	ok
+All-MKP-Instances/sac94/pet/pet5.dat	0.0029	ok
+All-MKP-Instances/sac94/pet/pet6.dat	0.1906	ok
+All-MKP-Instances/sac94/pet/pet7.dat	4.4887	ok
+tests cnt: 6
+ok: 6
+not ok: 0
+average time (ms): 0.781903
+median time (ms): 0.003584

@@ -1,0 +1,4 @@
+607
+7
+0 3 40 41 48 61 68 
+[{"duration_time": 0, "solve_optimal": 6, "solve_restricted_core_problem": 524, "solve_restricted_core_problem_time_sum": 21, "solve_restricted_core_problem_lp_relaxation_time_sum": 20, "variable_fixing": 324, "lp_relaxation": 0, "k_diff_sum": 134}]
