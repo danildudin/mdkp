@@ -8,15 +8,17 @@
 class CORALSolver final : public ISolver {
 public:
 	struct Metadata {
-		long long duration_time = 0;
-		long long k_diff_sum = 0;
-		long long solve_optimal = 0;
-		long long solve_restricted_core_problem = 0;
-		long long solve_restricted_core_problem_time_sum = 0;
-		long long solve_restricted_core_problem_lp_relaxation_time_sum = 0;
-		long long variable_fixing = 0;
-		long long lp_relaxation = 0;
-		// std::vector<int> k_cnt = std::vector<int>(101);
+		long long solve_optimal_cnt = 0;
+		long long solve_optimal_ts = 0;
+		long long variable_fixing_cnt = 0;
+		long long variable_fixing_ts = 0;
+		long long solve_restricted_core_problem_cnt = 0;
+		long long solve_restricted_core_problem_ts = 0;
+		long long solve_restricted_core_problem_coredata_ts = 0;
+		long long solve_restricted_core_problem_find_k_ts = 0;
+		long long search_tree_ts = 0;
+		long long search_tree_cnt = 0;
+		std::vector<int> for_k_distribution = std::vector<int>(101);
 	};
 
 	CORALSolver(): result(problem) {}

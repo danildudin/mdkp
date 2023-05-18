@@ -158,70 +158,37 @@ namespace {
 	}
 
 	long long get_timestamp() {
-		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	}
 
-	// boost::asio::thread_pool core_pool(cmdargs.thread_count);
-	// std::atomic_int solve_optimal_cnt = 70;
 	Mdkp solve_restricted_core_problem(Mdkp mdkp, int lb, CORALSolver::Metadata &metadata) {
-		metadata.solve_restricted_core_problem++;
-		auto ts = get_timestamp();
+		metadata.solve_restricted_core_problem_cnt++;
+		auto start_time = get_timestamp();
 
 		if (!mdkp.is_feasible() || mdkp.n_size[Mdkp::CORE] == 0) return mdkp;
 
 		CoreData data;
 		int k_min = 0, k_max = 0;
-		auto ts1 = get_timestamp();
+
+		auto data_ts = get_timestamp();
 		data = CoreData(mdkp);
+		metadata.solve_restricted_core_problem_coredata_ts += get_timestamp() - data_ts;
+
+		auto find_k_ts = get_timestamp();
 		k_min = find_k(mdkp, lb, true);
 		k_max = find_k(mdkp, lb, false);
-
-		// if (cmdargs.thread_count > 1 && solve_optimal_cnt.load() < 24) {
-		// 	std::packaged_task<CoreData(const Mdkp*)> core_data_task([](const Mdkp* mdkp) { return CoreData(*mdkp); });
-		// 	std::future<CoreData> core_data_future = core_data_task.get_future();
-		// 	boost::asio::post(core_pool, std::bind(std::move(core_data_task), &mdkp));
-
-		// 	k_min = find_k(mdkp, lb, true);
-		// 	k_max = find_k(mdkp, lb, false);
-		// 	data = core_data_future.get();
-		// } else {
-		// 	data = CoreData(mdkp);
-		// 	k_min = find_k(mdkp, lb, true);
-		// 	k_max = find_k(mdkp, lb, false);
-		// }
-
-		// if (cmdargs.thread_count > 1) {
-		// 	std::packaged_task<CoreData(const Mdkp*)> core_data_task([](const Mdkp* mdkp) { return CoreData(*mdkp); });
-		// 	std::future<CoreData> core_data_future = core_data_task.get_future();
-		// 	boost::asio::post(core_pool, std::bind(std::move(core_data_task), &mdkp));
-
-		// 	std::packaged_task<int(const Mdkp*, int)> k_min_task([](const Mdkp* mdkp, int lb) { return find_k(*mdkp, lb, true); });
-		// 	std::future<int> k_min_future = k_min_task.get_future();
-		// 	boost::asio::post(core_pool, std::bind(std::move(k_min_task), &mdkp, lb));
-
-		// 	std::packaged_task<int(const Mdkp*, int)> k_max_task([](const Mdkp* mdkp, int lb) { return find_k(*mdkp, lb, false); });
-		// 	std::future<int> k_max_future = k_max_task.get_future();
-		// 	boost::asio::post(core_pool, std::bind(std::move(k_max_task), &mdkp, lb));
-
-		// 	data = core_data_future.get();
-		// 	k_min = k_min_future.get();
-		// 	k_max = k_max_future.get();
-		// } else {
-		// 	data = CoreData(mdkp);
-		// 	k_min = find_k(mdkp, lb, true);
-		// 	k_max = find_k(mdkp, lb, false);
-		// }
-
-		metadata.solve_restricted_core_problem_lp_relaxation_time_sum += get_timestamp() - ts1;
-		metadata.k_diff_sum += std::max(0, k_max - k_min + 1);
-		// metadata.k_cnt[std::max(0, k_max - k_min + 1)]++;
+		metadata.solve_restricted_core_problem_find_k_ts += get_timestamp() - find_k_ts;
+		metadata.for_k_distribution[std::max(0, k_max - k_min + 1)]++;
 
 		Mdkp res = mdkp;
 		for (data.k = k_min; data.k <= k_max; data.k++) {
+			metadata.search_tree_cnt++;
+			auto search_tree_ts = get_timestamp();
 			search_tree(data, mdkp, res, lb, 0);
+			metadata.search_tree_ts += get_timestamp() - search_tree_ts;
 		}
 
-		metadata.solve_restricted_core_problem_time_sum += get_timestamp() - ts;
+		metadata.solve_restricted_core_problem_ts += get_timestamp() - start_time;
 		return res;
 	}
 
@@ -230,8 +197,6 @@ namespace {
 	}
 
 	Mdkp variable_fixing(Mdkp mdkp, Mdkp& res, CORALSolver::Metadata &metadata) {
-		metadata.variable_fixing++;
-
 		if (!mdkp.is_feasible()) return mdkp;
 
 		auto lp_res = mdkp.lp_relaxation();
@@ -285,21 +250,25 @@ namespace {
 			}
 		}
 
+		
+
 		return mdkp;
 	}
 
 	void solve_optimal(Mdkp mdkp, Mdkp* res, CORALSolver::Metadata* metadata) {
-		metadata->solve_optimal++;
-		metadata->duration_time = get_timestamp();
+		metadata->solve_optimal_cnt++;
+		auto start_time = get_timestamp();
 
+		metadata->variable_fixing_cnt++;
 		mdkp = variable_fixing(std::move(mdkp), *res, *metadata);
+		metadata->variable_fixing_ts += get_timestamp() - start_time;
+
 		mdkp = solve_restricted_core_problem(std::move(mdkp), res->cost, *metadata);
 		if (mdkp.is_feasible()) {
 			compare_and_set(*res, mdkp);
 		}
 
-		metadata->duration_time = get_timestamp() - metadata->duration_time;
-		// solve_optimal_cnt--;
+		metadata->solve_optimal_ts += get_timestamp() - start_time;
 	}
 };
 
@@ -318,7 +287,6 @@ void CORALSolver::solve() {
 	}
 
 	boost::asio::thread_pool pool(cmdargs.thread_count);
-	// boost::asio::thread_pool pool(32);
 	metadata.reserve(problem.n);
 	metadata.emplace_back();
 	if (cmdargs.thread_count > 1) {
@@ -346,7 +314,6 @@ void CORALSolver::solve() {
 		mdkp.set_x(item.id, Mdkp::CORE);
 	}
 	pool.join();
-	// core_pool.join();
 }
 
 void CORALSolver::print_solution() {
@@ -362,15 +329,24 @@ void CORALSolver::print_solution() {
 
 std::ostream& operator<<(std::ostream& os, const CORALSolver::Metadata& md) {
 	os << "{";
-	os << "\"duration_time\": " << md.duration_time;
-	os << ", \"solve_optimal\": " << md.solve_optimal;
-	os << ", \"solve_restricted_core_problem\": " << md.solve_restricted_core_problem;
-	os << ", \"solve_restricted_core_problem_time_sum\": " << md.solve_restricted_core_problem_time_sum;
-	os << ", \"solve_restricted_core_problem_lp_relaxation_time_sum\": " << md.solve_restricted_core_problem_lp_relaxation_time_sum;
-	os << ", \"variable_fixing\": " << md.variable_fixing;
-	os << ", \"lp_relaxation\": " << md.lp_relaxation;
-	os << ", \"k_diff_sum\": " << md.k_diff_sum;
-	// os << ", \"k_cnt\": " << md.k_cnt;
+	os << "\"solve_optimal_cnt\": " << md.solve_optimal_cnt;
+	os << ", \"solve_optimal_ts\": " << md.solve_optimal_ts;
+	os << ", \"variable_fixing_cnt\": " << md.variable_fixing_cnt;
+	os << ", \"variable_fixing_ts\": " << md.variable_fixing_ts;
+	os << ", \"variable_fixing_ratio\": " << double(md.variable_fixing_ts) / md.solve_optimal_ts;
+
+	os << ", \"solve_restricted_core_problem_cnt\": " << md.solve_restricted_core_problem_cnt;
+	os << ", \"solve_restricted_core_problem_ts\": " << md.solve_restricted_core_problem_ts;
+	os << ", \"solve_restricted_core_problem_ratio\": " << double(md.solve_restricted_core_problem_ts) / md.solve_optimal_ts;
+
+	os << ", \"search_tree_cnt\": " << md.search_tree_cnt;
+	os << ", \"search_tree_ts\": " << md.search_tree_ts;
+	os << ", \"search_tree_ratio\": " << double(md.search_tree_ts) / md.solve_optimal_ts;
+
+	int stop = md.for_k_distribution.size() - 1;
+	while (stop >= 5 && md.for_k_distribution[stop] == 0) stop--;
+	os << ", \"for_k_distribution\": " << std::vector<int>(md.for_k_distribution.begin(), md.for_k_distribution.begin() + stop + 1);
+
 	os << "}";
 
 	return os;
