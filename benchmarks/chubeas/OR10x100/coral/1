@@ -1,0 +1,35 @@
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_1.dat	88.6066	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_10.dat	29.5632	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_2.dat	95.7299	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_3.dat	14.1550	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_4.dat	93.5435	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_5.dat	7.0689	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_6.dat	84.8600	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_7.dat	13.9470	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_8.dat	6.1872	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_9.dat	10.8427	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_1.dat	31.1122	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_10.dat	87.9170	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_2.dat	14.3659	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_3.dat	39.5198	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_4.dat	28.5134	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_5.dat	12.3202	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_6.dat	42.8980	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_7.dat	35.8106	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_8.dat	21.4705	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_9.dat	41.9441	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_1.dat	1.4107	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_10.dat	3.5940	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_2.dat	21.3567	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_3.dat	12.9301	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_4.dat	2.0419	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_5.dat	2.3033	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_6.dat	14.8753	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_7.dat	23.2351	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_8.dat	1.7752	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_9.dat	4.4431	ok
+tests cnt: 30
+ok: 30
+not ok: 0
+average time (ms): 29.611372
+median time (ms): 21.356690

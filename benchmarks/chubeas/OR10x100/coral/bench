@@ -1,0 +1,9 @@
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 16' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/16	120.5284	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 14' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/14	124.7183	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 12' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/12	126.5284	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 10' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/10	132.5116	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 8' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/8	143.4785	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 6' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/6	172.0237	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 4' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/4	235.5880	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 2' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/2	454.4945	
+python3 scripts/run_tests.py -c './build/mdkp --solver_type coral --thread_count 1' -p 'All-MKP-Instances/chubeas/OR10x100' -f '.*\..*\.dat$' > benchmarks/chubeas/OR10x100/coral/1	888.3749	

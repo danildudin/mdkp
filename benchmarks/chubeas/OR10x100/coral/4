@@ -1,0 +1,35 @@
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_1.dat	23.5270	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_10.dat	8.4305	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_2.dat	24.5433	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_3.dat	3.7053	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_4.dat	23.7568	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_5.dat	1.7287	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_6.dat	21.3883	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_7.dat	3.5311	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_8.dat	1.5997	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.25_9.dat	3.1229	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_1.dat	8.3685	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_10.dat	26.2947	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_2.dat	3.6641	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_3.dat	10.5571	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_4.dat	7.2952	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_5.dat	3.4183	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_6.dat	11.2028	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_7.dat	9.3467	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_8.dat	5.3762	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.50_9.dat	10.6332	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_1.dat	0.3650	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_10.dat	0.9012	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_2.dat	6.1043	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_3.dat	3.3723	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_4.dat	0.5357	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_5.dat	0.5927	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_6.dat	4.4961	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_7.dat	6.0418	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_8.dat	0.4688	ok
+All-MKP-Instances/chubeas/OR10x100/OR10x100-0.75_9.dat	1.1853	ok
+tests cnt: 30
+ok: 30
+not ok: 0
+average time (ms): 7.851781
+median time (ms): 5.376207
