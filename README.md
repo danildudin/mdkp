@@ -1,4 +1,5 @@
 # mdkp
+Для корректной работы необходимы [GNU Linear Programming Kit](https://www.gnu.org/software/glpk/) и [Boost C++ Libraries](https://www.boost.org).
 Команды нужно выполнять из корневого каталога репозитория.
 
 Собрать исполняемый файл:
